@@ -5,6 +5,7 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import pluginImport from "eslint-plugin-import";
 import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
+import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import unusedImports from "eslint-plugin-unused-imports";
 import globals from "globals";
@@ -137,6 +138,15 @@ export default [
         { blankLine: "always", prev: "export", next: "*" },
         { blankLine: "any", prev: "export", next: "export" },
       ],
+    },
+  },
+  reactYouMightNotNeedAnEffect.configs.strict,
+  {
+    // shadcn primitives are vendored and re-fetched by the CLI — exempt them
+    // from prop sorting (their multiline-prop-before-spread isn't autofixable).
+    files: ["components/ui/**"],
+    rules: {
+      "react/jsx-sort-props": "off",
     },
   },
   {
