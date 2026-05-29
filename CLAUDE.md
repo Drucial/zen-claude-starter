@@ -2,6 +2,8 @@
 
 Next.js 16 + React 19 + Tailwind v4 starter. TypeScript strict, ESLint + Prettier enforced. Run `pnpm fix` to auto-format and fix lint; `pnpm check` to verify (format, lint, typecheck).
 
+Code conventions (naming, anti-defaults, React discipline, reuse): @.claude/rules/code-quality.md
+
 ## Architecture
 
 ### Directory Structure
@@ -12,12 +14,12 @@ Next.js 16 + React 19 + Tailwind v4 starter. TypeScript strict, ESLint + Prettie
   - `layout/` — app shell: headers, nav, sidebar, footer
   - `shared/` — generic reusable components not tied to any feature
   - `<feature>/` or `<view>/` — feature- or view-specific component groups
-- `hooks/` — global hooks, grouped per model for data access
+- `hooks/` — all hooks live here, organized into per-feature/model subdirs (e.g. `hooks/users/`). Never co-locate hooks with feature components.
 - `context/` — global React context providers
 - `utils/` — global utilities
 - `api/` — external API clients and integration layer
 
-Create top-level `components`, `hooks`, `context`, `utils` dirs only when the code is needed globally. Otherwise co-locate within the feature directory that owns it.
+Create top-level `components`, `context`, `utils` dirs only when the code is needed globally; otherwise co-locate within the feature directory that owns it. Hooks are the exception — they always live under `hooks/`, never co-located.
 
 ### Component Co-location
 
@@ -33,21 +35,11 @@ components/dashboard/
     nav-items.ts
 ```
 
-### Components: Presentation Only
-
-- UI components stay presentational. Offload business logic to files in the associated `utils/` dir.
-- Static data (e.g., `navItems = [...]`) belongs in a `constants/` file, never inline in a component.
-- Components must not fetch or mutate data directly — they call hooks only.
-
 ### Data Fetching & Mutations
 
 - **Database access**: use Next.js server actions. Never call the DB from a component.
-- **Hooks per model**: group data hooks by model in `hooks/` (e.g., `hooks/use-users.ts`, `hooks/use-posts.ts`). Each file owns its model's queries and mutations.
-- **TanStack Query**: wrap server actions in `useQuery` / `useMutation` inside the hook files. Components consume the hooks.
-- **External APIs**: live in `api/`. Consume via hooks the same way — no direct fetch calls in components.
-
-### File Size & Reuse
-
-- Keep files small. Refactor by extracting subcomponents, utils, or constants before a file grows unwieldy.
-- Don't duplicate logic across components or files — extract to a shared util or component.
-- Prefer composing existing components over creating new ones. Check `components/ui/`, `components/shared/`, and `components/layout/` before adding anything new.
+- **Server Components**: may read data directly via server actions.
+- **Client Components**: never fetch directly. Consume queries and mutations as below.
+- **Queries**: define `queryOptions()` factories in the model's hooks dir (e.g. `hooks/users/users.queries.ts`) and call them directly with `useQuery(userQueries.all())`. Keys + `queryFn` + config live in one typed place. Promote to a custom hook only when there's real shared logic (combined queries, polling, derived state).
+- **Mutations**: use the shared `useAppMutation` wrapper, which standardizes success/error toasts and an `invalidates: [...]` option. Write a per-model mutation hook only when a mutation needs logic beyond toast + invalidation.
+- **External APIs**: live in `api/`. Consume the same way — no direct fetch calls in client components.
