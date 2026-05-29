@@ -14,7 +14,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "fix": "pnpm lint:fix && pnpm format",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck"
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck",
+    "create-project": "bash scripts/create-project.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
