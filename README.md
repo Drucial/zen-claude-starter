@@ -73,9 +73,8 @@ brief Claude Code when it works in this repo.
 
 ## Fonts
 
-Geist Sans and Geist Mono ship via the [`geist`](https://www.npmjs.com/package/geist)
-package, so the font files are bundled and builds never reach out to Google
-Fonts at build time.
+Geist Sans and Geist Mono are loaded with [`next/font`](https://nextjs.org/docs/app/api-reference/components/font),
+which self-hosts the fonts at build time — the create-next-app default.
 
 ## Claude Code on the Web
 

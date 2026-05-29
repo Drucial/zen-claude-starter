@@ -8,7 +8,5 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi
 
-corepack enable >/dev/null 2>&1 || true
-
 cd "${CLAUDE_PROJECT_DIR:-.}"
 pnpm install --frozen-lockfile
