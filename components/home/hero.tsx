@@ -66,8 +66,11 @@ export function Hero() {
           className="mt-6 flex items-center gap-3"
           transition={{ duration: 0.5, delay: 0.24, ease: "easeOut" }}
         >
-          <Button render={<a href="#start" />}>Get started</Button>
+          <Button nativeButton={false} render={<a href="#start" />}>
+            Get started
+          </Button>
           <Button
+            nativeButton={false}
             render={<a href={GITHUB_URL} rel="noreferrer" target="_blank" />}
             variant="outline"
           >

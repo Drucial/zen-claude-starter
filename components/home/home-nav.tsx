@@ -17,6 +17,7 @@ export function HomeNav() {
         <div className="flex items-center gap-1">
           <Button
             aria-label="GitHub repository"
+            nativeButton={false}
             render={<a href={GITHUB_URL} rel="noreferrer" target="_blank" />}
             size="icon"
             variant="ghost"
