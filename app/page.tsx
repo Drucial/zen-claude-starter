@@ -1,12 +1,21 @@
-import { ModeToggle } from "@/components/layout/mode-toggle";
+import { Guides } from "@/components/home/guides";
+import { Hero } from "@/components/home/hero";
+import { HomeFooter } from "@/components/home/home-footer";
+import { HomeNav } from "@/components/home/home-nav";
+import { Principles } from "@/components/home/principles";
+import { Stack } from "@/components/home/stack";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="absolute top-4 right-4">
-        <ModeToggle />
-      </div>
-      <h1 className="text-4xl font-semibold tracking-tight">Hello, world.</h1>
+    <div className="min-h-screen" id="top">
+      <HomeNav />
+      <main>
+        <Hero />
+        <Principles />
+        <Stack />
+        <Guides />
+      </main>
+      <HomeFooter />
     </div>
   );
 }

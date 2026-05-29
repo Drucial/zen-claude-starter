@@ -45,9 +45,9 @@ hard conventions for this repo — not conditional on stack.
   `utils/` dir. Components never embed non-trivial logic.
 - **No state-sync in effects.** Don't mirror props/state into other state with
   `useEffect(() => setX(prop), [prop])` — derive the value during render instead.
-  See `react-effect-discipline`.
+  Enforced by `eslint-plugin-react-you-might-not-need-an-effect` (strict).
 - **No reflexive memoization.** Don't add `useMemo`/`useCallback`/`React.memo` by
-  default. Add only with a measured reason. See `react-memo-discipline`.
+  default. Add only with a measured, profiled reason.
 
 ## Constants
 
