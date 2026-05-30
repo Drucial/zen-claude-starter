@@ -93,6 +93,9 @@ git -C "$TEMPLATE_DIR" archive --format=tar "$snapshot" | tar -xf - -C "$target"
 rm -f "$target/scripts/create-project.sh"
 rmdir "$target/scripts" 2>/dev/null || true
 
+# The landing page is the template's showcase — new apps get a minimal home.
+rm -rf "$target/components/home"
+
 # Rewrite project identity: package name, README mentions, page title.
 TARGET="$target" PNAME="$name" node <<'NODE'
 const fs = require("fs");
@@ -126,6 +129,21 @@ if (fs.existsSync(layoutPath)) {
     .replace(/title:\s*"[^"]*"/, `title: "${pretty}"`);
   fs.writeFileSync(layoutPath, src);
 }
+
+const minimalPage = `import { ModeToggle } from "@/components/layout/mode-toggle";
+
+export default function Home() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="absolute top-4 right-4">
+        <ModeToggle />
+      </div>
+      <h1 className="text-4xl font-semibold tracking-tight">${pretty}</h1>
+    </div>
+  );
+}
+`;
+fs.writeFileSync(path.join(target, "app", "page.tsx"), minimalPage);
 NODE
 
 git -C "$target" init -q
