@@ -12,6 +12,7 @@ hard conventions for this repo — not conditional on stack.
 - WHY comments only, never WHAT. If code needs a "what" comment, rename instead.
 - Keep comments terse and concise
 - Don't modify generated files (`*.gen.*`, `*.generated.*`).
+- Don't use map indexes as keys. Use real unique identifiers — indices shift with mutations.
 
 ## Naming
 
@@ -48,12 +49,35 @@ hard conventions for this repo — not conditional on stack.
   Enforced by `eslint-plugin-react-you-might-not-need-an-effect` (strict).
 - **No reflexive memoization.** Don't add `useMemo`/`useCallback`/`React.memo` by
   default. Add only with a measured, profiled reason.
+- **Accessible by default.** Every interactive control ships with an accessible
+  name — icon-only buttons and standalone checkboxes/inputs get an `aria-label`
+  (include the item it acts on, e.g. `Check ${name}`) or an associated `<label>`.
+  Generic labels ("Expand", "Edit") are ambiguous in lists — name the target.
+  Never ship an unlabeled control.
 
 ## Constants
 
 - **Collections** (arrays/objects/tables, e.g. `NAV_ITEMS = [...]`) belong in a
   `constants/` file — never inline in a component.
 - **Scalars** (e.g. `DELAY_TIME = 300`) may stay inline.
+
+## Forms & validation
+
+- **Form schemas live in the form file.** A form's zod schema and its inferred
+  input type are defined in the same component file as the form — never in a
+  co-located `utils/schemas.ts`. They're tightly coupled to the form and
+  shouldn't be hunted down elsewhere. (A schema genuinely shared by multiple
+  forms is the rare exception — only then promote it to a shared module.)
+
+## Shared formatters & cross-cutting utils
+
+- **Anything that enforces consistency across views lives in common `utils/`**,
+  never co-located in a feature `utils/` dir. Formatters and similar helpers that
+  turn a value into a display string (`formatDate`, `formatCurrency`,
+  `formatName`, …) belong there so the whole app reads that value one consistent
+  way.
+- This applies to **cross-cutting output only**. Logic tied to a single feature —
+  bucketing, filtering, navigation — stays with that feature.
 
 ## Data access
 
@@ -78,6 +102,9 @@ Search before creating anything new.
 
 ## Tests
 
+- **Tests ship with the logic.** Any PR that adds or changes testable logic
+  (`utils/`, hooks, server actions) includes its tests in the same PR — never a
+  follow-up.
 - Test logic, not presentation. Cover `utils/`, hooks, server actions, and other
   business logic. Don't write tests for presentational UI components.
 - Co-locate tests with the file under test in a `__tests__/` dir next to it

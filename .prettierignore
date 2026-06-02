@@ -1,6 +1,7 @@
 # Generated / managed files — never format these
 pnpm-lock.yaml
 .next/
+coverage/
 next-env.d.ts
 *.gen.*
 *.generated.*
