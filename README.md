@@ -6,7 +6,7 @@ documented.
 
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript 5 (strict) · Tailwind
 v4 · TanStack Query v5 · Zod · shadcn (base-nova) on
-[Base UI](https://base-ui.com) · next-themes · Sonner.
+[Base UI](https://base-ui.com) · next-themes · Sonner · Motion · Vitest.
 
 ## Requirements
 

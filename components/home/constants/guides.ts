@@ -37,6 +37,27 @@ const createPost = useAppMutation({
 });`,
   },
   {
+    title: "Validate with Zod",
+    description:
+      "Keep a form's schema and its inferred type in the form file — they're tightly coupled. Parse on submit for validated, fully typed input.",
+    language: "tsx",
+    code: `// components/contact/contact-form.tsx
+import { z } from "zod";
+
+const contactSchema = z.object({
+  email: z.email(),
+  message: z.string().min(1, "Required"),
+});
+
+type ContactInput = z.infer<typeof contactSchema>;
+
+function onSubmit(values: ContactInput) {
+  const result = contactSchema.safeParse(values);
+  if (!result.success) return result.error;
+  // result.data is typed and validated
+}`,
+  },
+  {
     title: "Write a test",
     description:
       "Co-locate it in a __tests__ dir next to the file. Cover the logic — utils, hooks, actions — not the markup.",
