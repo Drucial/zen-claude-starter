@@ -4,6 +4,21 @@ Next.js 16 + React 19 + Tailwind v4 starter. TypeScript strict, ESLint + Prettie
 
 Code conventions (naming, anti-defaults, React discipline, reuse): @.claude/rules/code-quality.md
 
+## Communication
+
+Speak plainly and concisely. No filler, no preamble, no restating the question. Still surface what matters — the plan before a multi-step change, the root cause of a bug, tradeoffs in a decision — just say it directly and stop. Prefer a short answer over a long one when both are complete.
+
+## Branching & PRs
+
+- **1 unit of work = 1 branch = 1 PR.** Scope each PR as a cohesive,
+  independently-shippable chunk. Don't split tightly-related work that ships
+  together — deps + the layer that consumes them, a shell + the routes it renders,
+  a schema + its CRUD all belong in one PR. Don't over-group either: independent
+  slices that could ship on their own get their own PR.
+- **Keep PR descriptions lean.** A clear title and a short description of the goal
+  and scope is enough. Skip exhaustive checklists and boilerplate unless the work
+  genuinely needs them.
+
 ## Architecture
 
 ### Directory Structure

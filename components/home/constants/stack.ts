@@ -37,6 +37,12 @@ export const STACK: StackItem[] = [
     href: "https://tanstack.com/query/latest/docs/framework/react/overview",
   },
   {
+    name: "Zod",
+    version: "4",
+    description: "Schema validation with static type inference.",
+    href: "https://zod.dev",
+  },
+  {
     name: "shadcn · Base UI",
     version: "base-nova",
     description: "Unstyled primitives you vendor and own outright.",

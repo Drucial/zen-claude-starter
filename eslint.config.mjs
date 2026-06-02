@@ -150,6 +150,6 @@ export default [
     },
   },
   {
-    ignores: [".next/**", "out/**", "build/**", "next-env.d.ts"],
+    ignores: [".next/**", "out/**", "build/**", "coverage/**", "next-env.d.ts"],
   },
 ];

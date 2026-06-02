@@ -5,8 +5,8 @@ consistent feature work — with conventions enforced by the toolchain, not just
 documented.
 
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript 5 (strict) · Tailwind
-v4 · TanStack Query v5 · shadcn (base-nova) on [Base UI](https://base-ui.com) ·
-next-themes · Sonner.
+v4 · TanStack Query v5 · Zod · shadcn (base-nova) on
+[Base UI](https://base-ui.com) · next-themes · Sonner · Motion · Vitest.
 
 ## Requirements
 
@@ -26,15 +26,16 @@ going — the page hot-reloads.
 
 ## Scripts
 
-| Command         | What it does                                           |
-| --------------- | ------------------------------------------------------ |
-| `pnpm dev`      | Start the dev server                                   |
-| `pnpm build`    | Production build                                       |
-| `pnpm start`    | Serve the production build                             |
-| `pnpm fix`      | Auto-fix lint + format (run before committing)         |
-| `pnpm check`    | Verify format, lint, and types — the same gate CI runs |
-| `pnpm test`     | Vitest in watch mode                                   |
-| `pnpm test:run` | Run the test suite once (CI mode)                      |
+| Command              | What it does                                           |
+| -------------------- | ------------------------------------------------------ |
+| `pnpm dev`           | Start the dev server                                   |
+| `pnpm build`         | Production build                                       |
+| `pnpm start`         | Serve the production build                             |
+| `pnpm fix`           | Auto-fix lint + format (run before committing)         |
+| `pnpm check`         | Verify format, lint, and types — the same gate CI runs |
+| `pnpm test`          | Vitest in watch mode                                   |
+| `pnpm test:run`      | Run the test suite once (CI mode)                      |
+| `pnpm test:coverage` | Run the suite once with a coverage report              |
 
 ## Project Structure
 
