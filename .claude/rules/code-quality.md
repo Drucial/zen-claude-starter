@@ -13,6 +13,10 @@ hard conventions for this repo — not conditional on stack.
 - Keep comments terse and concise
 - Don't modify generated files (`*.gen.*`, `*.generated.*`).
 - Don't use map indexes as keys. Use real unique identifiers — indices shift with mutations.
+- No IIFEs, ever. Never invoke a function inline to produce a value — including
+  `await`-ing or calling a helper inside JSX (`{(() => {…})()}`, `{await fn()}`).
+  Do the work in the component body and assign it to a named variable, or pull it
+  into a named function the body calls.
 
 ## Naming
 
@@ -54,6 +58,11 @@ hard conventions for this repo — not conditional on stack.
   (include the item it acts on, e.g. `Check ${name}`) or an associated `<label>`.
   Generic labels ("Expand", "Edit") are ambiguous in lists — name the target.
   Never ship an unlabeled control.
+- **`nativeButton={false}` when rendering a Base UI button as a non-button.**
+  Base UI button-like primitives (`Button`, `Tabs.Tab`, etc.) default
+  `nativeButton` to `true` and throw a console error when their `render` prop is
+  an `<a>`/`<Link>`. Whenever you pass `render={<Link …/>}` (or any non-`<button>`)
+  to one, set `nativeButton={false}`.
 
 ## Constants
 
@@ -104,7 +113,7 @@ Search before creating anything new.
 
 - **Tests ship with the logic.** Any PR that adds or changes testable logic
   (`utils/`, hooks, server actions) includes its tests in the same PR — never a
-  follow-up.
+  follow-up. Run `pnpm test:coverage` before opening a PR.
 - Test logic, not presentation. Cover `utils/`, hooks, server actions, and other
   business logic. Don't write tests for presentational UI components.
 - Co-locate tests with the file under test in a `__tests__/` dir next to it
