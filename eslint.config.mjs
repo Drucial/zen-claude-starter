@@ -152,7 +152,7 @@ export default [
   {
     // The scaffolder is a standalone Node package, not app code — relative
     // imports are correct there and the @/ alias doesn't exist.
-    files: ["create/**"],
+    files: ["create/**", "scripts/**"],
     languageOptions: {
       globals: {
         ...globals.node,

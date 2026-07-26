@@ -63,17 +63,20 @@ defaults and fail fast on a missing name instead of hanging.
 ### Releasing the scaffolder
 
 `npx` downloads the template from the git tag the release was cut from, so a
-given version scaffolds the same project forever. That means the tag has to
-exist before the publish is usable:
+given version scaffolds the same project forever — which also means the version
+and the tag have to move together.
 
 ```bash
-# bump "version" and "zen.templateRef" in create/package.json together
-git tag v0.1.0 && git push --tags
-cd create && npm publish
+pnpm release patch --dry-run   # verify without changing anything
+pnpm release patch             # or minor, major, or an exact version
 ```
 
-The two fields are checked against each other by
-`create/__tests__/template-source.test.mjs`, so they can't drift.
+It refuses to run on a dirty tree, off `main`, behind the remote, or onto a tag
+that already exists. Then it runs `check` and the test suite, scaffolds a
+throwaway project in each layout and builds it — a release whose own tests pass
+but whose output doesn't build is the failure worth catching — and only then
+bumps, commits, and tags. Pushing and publishing happen last, after a
+confirmation, and it tells you how to undo the local commit if you decline.
 
 Either way it copies the template, installs dependencies, formats, and opens
 with one clean commit. `--monorepo` splits the same code into
