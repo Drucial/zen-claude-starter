@@ -43,8 +43,8 @@ export const STACK: StackItem[] = [
     href: "https://zod.dev",
   },
   {
-    name: "shadcn · Base UI",
-    version: "base-nova",
+    name: "shadcn · Radix",
+    version: "new-york",
     description: "Unstyled primitives you vendor and own outright.",
     href: "https://ui.shadcn.com/docs",
   },

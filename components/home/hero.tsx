@@ -66,16 +66,14 @@ export function Hero() {
           className="mt-6 flex items-center gap-3"
           transition={{ duration: 0.5, delay: 0.24, ease: "easeOut" }}
         >
-          <Button nativeButton={false} render={<a href="#start" />}>
-            Get started
+          <Button asChild>
+            <a href="#start">Get started</a>
           </Button>
-          <Button
-            nativeButton={false}
-            render={<a href={GITHUB_URL} rel="noreferrer" target="_blank" />}
-            variant="outline"
-          >
-            <GitHubIcon className="size-4" />
-            GitHub
+          <Button asChild variant="outline">
+            <a href={GITHUB_URL} rel="noreferrer" target="_blank">
+              <GitHubIcon className="size-4" />
+              GitHub
+            </a>
           </Button>
         </motion.div>
         <motion.a

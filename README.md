@@ -5,8 +5,8 @@ consistent feature work — with conventions enforced by the toolchain, not just
 documented.
 
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript 5 (strict) · Tailwind
-v4 · TanStack Query v5 · Zod · shadcn (base-nova) on
-[Base UI](https://base-ui.com) · next-themes · Sonner · Motion · Vitest.
+v4 · TanStack Query v5 · Zod · shadcn (new-york) on
+[Radix](https://www.radix-ui.com) · next-themes · Sonner · Motion · Vitest.
 
 ## Requirements
 
