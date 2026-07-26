@@ -67,6 +67,12 @@ export const STACK: StackItem[] = [
     href: "https://motion.dev/docs/react",
   },
   {
+    name: "Turborepo",
+    version: "2",
+    description: "Task graph and caching for the monorepo layout.",
+    href: "https://turborepo.com/docs",
+  },
+  {
     name: "Vitest",
     version: "4",
     description: "Fast unit tests with React Testing Library.",

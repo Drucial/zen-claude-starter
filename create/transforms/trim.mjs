@@ -12,6 +12,12 @@ const TEMPLATE_ONLY_PATHS = [
   join("components", "home"),
   // The design docs describe building the template, not using it.
   "docs",
+  // The social cards name the product, and sitemap/robots point at its domain.
+  // The icons stay: a neutral mark beats the framework's default.
+  join("app", "opengraph-image.tsx"),
+  join("app", "twitter-image.tsx"),
+  join("app", "sitemap.ts"),
+  join("app", "robots.ts"),
 ];
 
 /** Docs carrying sections that only make sense in the template repo. */

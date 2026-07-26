@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Scaffold a Next.js app or monorepo from the zen-claude-starter methodology.",
   "license": "MIT",
+  "homepage": "https://zenstart.io",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Drucial/zen-claude-starter.git",

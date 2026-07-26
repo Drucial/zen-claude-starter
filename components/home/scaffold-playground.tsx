@@ -6,6 +6,7 @@ import { TerminalIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
+import { CREATE_COMMAND } from "./constants/links";
 import type { ScaffoldMode } from "./constants/scaffold-modes";
 import { SCAFFOLD_MODES } from "./constants/scaffold-modes";
 import { CopyButton } from "./copy-button";
@@ -16,16 +17,16 @@ export function ScaffoldPlayground() {
   const [mode, setMode] = useState<ScaffoldMode>(SCAFFOLD_MODES[0]);
 
   const name = sanitizeProjectName(raw) || "my-app";
-  const command = `pnpm create-project ${name}${mode.flag}`;
+  const command = `${CREATE_COMMAND} ${name}${mode.flag}`;
 
   return (
     <div className="border-border bg-card/40 rounded-2xl border p-6 sm:p-8">
-      <div className="flex items-center gap-2 text-sm font-medium tracking-tight">
+      <h3 className="flex items-center gap-2 text-sm font-medium tracking-tight">
         <TerminalIcon className="text-muted-foreground size-4" />
         Start a project
-      </div>
+      </h3>
       <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-        Pick a layout, name it, copy the command, and run it from the repo.
+        Pick a layout, name it, and run the command anywhere — no clone needed.
       </p>
       <div
         aria-label="Project layout"
