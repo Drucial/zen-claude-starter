@@ -12,7 +12,7 @@ import {
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { swapLayoutBlocks } from "./markdown-blocks.mjs";
+import { swapDocBlocks } from "./markdown-blocks.mjs";
 import { rewriteImports } from "./rewrite-imports.mjs";
 import { splitDependencies } from "./split-dependencies.mjs";
 
@@ -142,7 +142,6 @@ function restructureFiles(dir) {
   }
 
   cpSync(TEMPLATE_ROOT, dir, { recursive: true });
-  rmSync(join(dir, "docs"), { recursive: true, force: true });
 }
 
 function rewriteWorkspaceImports(dir) {
@@ -254,5 +253,5 @@ export function applyMonorepo(dir, name) {
   addSourceDirectives(dir);
   writePackageJsons(dir, name, pkg);
   writeWorkspaceManifest(dir);
-  swapLayoutBlocks(dir);
+  swapDocBlocks(dir, "layout");
 }

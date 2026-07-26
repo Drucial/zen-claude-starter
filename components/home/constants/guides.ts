@@ -65,7 +65,7 @@ function onSubmit(values: ContactInput) {
     code: `// utils/__tests__/slugify.test.ts
 import { describe, expect, it } from "vitest";
 
-import { slugify } from "../slugify";
+import { slugify } from "@/utils/slugify";
 
 describe("slugify", () => {
   it("lowercases and hyphenates", () => {

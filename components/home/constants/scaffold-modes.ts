@@ -13,7 +13,7 @@ export const SCAFFOLD_MODES: [ScaffoldMode, ScaffoldMode] = [
     label: "Single app",
     flag: "",
     steps: [
-      "Run it bare to be prompted for layout, name, and location",
+      "Run it bare to pick the layout and dependencies interactively",
       "Copies the template, then starts fresh git history",
       "Installs dependencies — ready to pnpm dev",
     ],

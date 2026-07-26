@@ -91,11 +91,15 @@ hard conventions for this repo — not conditional on stack.
 
 ## Data access
 
+<!-- data:start -->
+
 See `CLAUDE.md` → Data Fetching & Mutations for the full flow. In short:
 
 - **Server Components** may read data directly via server actions.
 - **Client Components** never fetch directly — consume queries via
   `useQuery(queryOptions…)` and mutations via the shared `useAppMutation` wrapper.
+
+<!-- data:end -->
 
 ## Reuse before build
 

@@ -56,9 +56,13 @@ components/dashboard/
 
 ### Data Fetching & Mutations
 
+<!-- data:start -->
+
 - **Database access**: use Next.js server actions. Never call the DB from a component.
 - **Server Components**: may read data directly via server actions.
 - **Client Components**: never fetch directly. Consume queries and mutations as below.
 - **Queries**: define `queryOptions()` factories in the model's hooks dir (e.g. `hooks/users/users.queries.ts`) and call them directly with `useQuery(userQueries.all())`. Keys + `queryFn` + config live in one typed place. Promote to a custom hook only when there's real shared logic (combined queries, polling, derived state).
 - **Mutations**: use the shared `useAppMutation` wrapper, which standardizes success/error toasts and an `invalidates: [...]` option. Write a per-model mutation hook only when a mutation needs logic beyond toast + invalidation. **Invalidate by query-key reference, not raw arrays** — pass the factory's key (`invalidates: [todoQueries.all().queryKey]`), never a hand-written `[["todos"]]`, so keys live in one typed place and can't drift.
 - **External APIs**: live in `api/`. Consume the same way — no direct fetch calls in client components.
+
+<!-- data:end -->

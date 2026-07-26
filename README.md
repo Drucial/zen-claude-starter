@@ -33,11 +33,24 @@ pnpm create-project                     # prompts for everything
 pnpm create-project my-app --monorepo   # or answer up front
 ```
 
-Run bare and it asks for the layout, name, and location. Any answer you pass as
-an argument or flag skips its prompt, and `--yes` skips all of them and takes
-the defaults — a single app in the template's parent directory. Prompts are
-suppressed when stdin isn't a terminal, so CI runs fail fast on a missing name
-instead of hanging.
+Run bare and it walks you through the name, layout, dependencies, and location
+with arrow-key selection. Any answer you pass as an argument or flag skips its
+prompt:
+
+| Flag                                      | Effect                           |
+| ----------------------------------------- | -------------------------------- |
+| `--monorepo`                              | Turborepo workspace, no prompt   |
+| `--no-query` / `--no-zod` / `--no-motion` | Leave that dependency out        |
+| `-y`, `--yes`                             | Skip every prompt, take defaults |
+
+TanStack Query, Zod, and Motion are the only optional dependencies —
+everything else is load-bearing. Dropping Query also removes `useAppMutation`,
+the query hooks, the `QueryClientProvider`, and rewrites the data-access rules
+in `CLAUDE.md` so they describe server actions instead of code that isn't
+there.
+
+Prompts are suppressed when stdin isn't a terminal, so CI runs take the
+defaults and fail fast on a missing name instead of hanging.
 
 Either way it copies the template, installs dependencies, formats, and opens
 with one clean commit. `--monorepo` splits the same code into
@@ -85,11 +98,16 @@ hand-written code stay consistent:
 - **Server Components by default.** `"use client"` only for interactivity,
   state, effects, or browser APIs.
 - **Components render; logic lives in `utils/`.** No business logic embedded in
-  components.
+components.
+<!-- data:start -->
+
 - **Data access.** Server Components read directly via server actions. Client
   Components never fetch directly — they consume `queryOptions()` factories with
   `useQuery(...)` and mutate through the shared `useAppMutation` wrapper. See
   `hooks/users/` for the reference pattern.
+
+<!-- data:end -->
+
 - **Enforced style.** ESLint (flat config) + Prettier handle import sorting,
   prop sorting, `type`-over-`interface`, `import type`, `@/` alias imports, and
   effect discipline. `pnpm check` fails on violations.

@@ -23,13 +23,14 @@ snapshot.
 - One source of truth for rules, ESLint, and app code.
 - Structured so publishing the scaffolder as `npx zen-claude-starter` is a
   publish step, not a rewrite.
+- Let the optional dependency groups be switched off, interactively or by flag.
 
 ## Non-goals
 
-- Feature toggles (`--no-query` and friends). This design lays the manifest that
-  makes them possible and stops there.
 - A second app in the generated workspace. `apps/web` is the only app on day
   one; `packages/ui` proves the cross-package seam.
+- A published npm package. The CLI is shaped so publishing is the only
+  remaining step, but the `remote` template source isn't written yet.
 
 ## Output
 
@@ -54,7 +55,7 @@ my-app/
     utils/cn.ts
     styles/globals.css
   packages/eslint-config/     package.json, base.mjs, react.mjs, next.mjs
-  packages/typescript-config/ package.json, base.json, nextjs.json, react-library.json
+  packages/typescript-config/ package.json, base.json, nextjs.json
 ```
 
 Package namespace is `@repo/*` — the Turborepo and shadcn convention, so their
@@ -72,16 +73,23 @@ stays out of the workspace graph, and it carries its own `package.json` with a
 create/
   package.json          name "zen-claude-starter", bin, files, type: module
   cli.mjs               args, prompts, orchestration
+  tui.mjs               colours, banner, select / multiselect, spinner
+  layouts.mjs           the single-app / monorepo choices
+  features.mjs          the optional dependency groups
   template-source.mjs   materialize the template into the target dir
   transforms/
     manifest.mjs        package → { targets, feature }
     identity.mjs        project name, README, layout title, minimal page
-    single-app.mjs      drop create/ + components/home
+    trim.mjs            drop create/ + components/home + docs/
+    prune-features.mjs  drop the dependency groups that were switched off
     monorepo.mjs        restructure into apps/web + packages/*
     split-dependencies.mjs
     rewrite-imports.mjs
     markdown-blocks.mjs
-  templates/monorepo/   static files
+  templates/
+    monorepo/           static workspace files
+    no-query/           Providers without the QueryClientProvider
+    docs/               layout and data block replacements
   __tests__/
 ```
 
@@ -108,7 +116,24 @@ in, the generated dependency maps out, version ranges preserved.
 it fails the transform and its test, rather than silently landing nowhere. This
 is the anti-drift guarantee, and the same test protects the feature tags.
 
-### Layout-specific docs
+### Optional features
+
+`transforms/prune-features.mjs` reads the same `feature` tags to drop what the
+user turned off. `zod` and `motion` are leaves — nothing in a scaffolded
+project imports them, so removing their packages is the whole job. `query`
+additionally owns `useAppMutation`, the query hooks and their test, the
+`QueryClientProvider`, and the data-access sections of the docs.
+
+Two mechanisms carry the difference. `Providers` is swapped wholesale from
+`templates/no-query/` rather than edited, because unwrapping a JSX provider is
+not a safe textual edit. The docs use the same marked-block swap as the layout,
+under a second `data` block — leaving a project whose `CLAUDE.md` still
+described `useAppMutation` would be worse than not offering the toggle.
+
+Pruning runs while the tree is still flat, so the monorepo transform splits an
+already-reduced dependency set and needs no knowledge of features.
+
+### Variant-specific docs
 
 `CLAUDE.md`, `.claude/rules/code-quality.md`, and `README.md` describe the
 single-app layout. Maintaining two full copies guarantees drift, so only the
@@ -120,9 +145,11 @@ layout-specific sections are wrapped in markers:
 <!-- layout:end -->
 ```
 
-`markdown-blocks.mjs` swaps the block contents for the monorepo variants in
-`create/templates/monorepo/docs/`. Everything else in those files — the
-conventions, data-access rules, anti-defaults — stays shared and written once.
+`markdown-blocks.mjs` swaps the block contents for the variant in
+`create/templates/docs/<block>/`. Two blocks exist: `layout` (single-app vs
+workspace directory structure) and `data` (TanStack Query vs server actions).
+Everything else in those files — the conventions, the anti-defaults — stays
+shared and written once.
 
 ## Data flow
 
@@ -130,7 +157,8 @@ conventions, data-access rules, anti-defaults — stays shared and written once.
 template repo
   └─ resolveTemplate({ from: "local" })   → target dir (tracked files, no gitignored paths)
        └─ identity transform              → project name, title, minimal page
-            ├─ single-app transform       → drop create/, components/home
+            ├─ trim transform             → drop create/, components/home, docs/
+            ├─ prune-features             → drop excluded deps, files, doc blocks
             └─ monorepo transform
                  ├─ splitDependencies()   → root / web / ui / eslint-config deps
                  ├─ file moves            → apps/web, packages/ui

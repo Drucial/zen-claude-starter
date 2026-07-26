@@ -9,7 +9,10 @@
   },
   "files": [
     "cli.mjs",
+    "features.mjs",
+    "layouts.mjs",
     "template-source.mjs",
+    "tui.mjs",
     "transforms",
     "templates"
   ],
