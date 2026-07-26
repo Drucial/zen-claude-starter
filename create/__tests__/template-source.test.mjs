@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -41,6 +41,22 @@ describe("findLocalTemplate", () => {
 });
 
 describe("published package", () => {
+  it("has no template file npm would strip from the tarball", () => {
+    // npm silently drops any file named .gitignore when packing, so a template
+    // that ships one loses it for every npx user while working locally.
+    const stripped = [];
+    const walk = (dir) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const path = join(dir, entry.name);
+        if (entry.isDirectory()) walk(path);
+        else if (entry.name === ".gitignore") stripped.push(path);
+      }
+    };
+    walk(join(CREATE_DIR, "templates"));
+
+    expect(stripped).toEqual([]);
+  });
+
   it("ships every module the CLI imports", () => {
     const entryPoints = ["cli.mjs", ...manifest.files];
     const imported = new Set();

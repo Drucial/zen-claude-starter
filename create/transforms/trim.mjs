@@ -12,6 +12,9 @@ const TEMPLATE_ONLY_PATHS = [
   join("components", "home"),
   // The design docs describe building the template, not using it.
   "docs",
+  // Carrying this over would put someone else's copyright on the user's repo,
+  // and GitHub would label their project MIT on the strength of it.
+  "LICENSE",
   // The social cards name the product, and sitemap/robots point at its domain.
   // The icons stay: a neutral mark beats the framework's default.
   join("app", "opengraph-image.tsx"),

@@ -39,6 +39,22 @@ describe("toTitleCase", () => {
 });
 
 describe("rewritePackageJson", () => {
+  it("drops every script that points into a directory trim.mjs deletes", () => {
+    const result = rewritePackageJson(
+      {
+        name: "zen-claude-starter",
+        scripts: {
+          dev: "next dev",
+          "create-project": "node create/cli.mjs",
+          release: "node scripts/release.mjs",
+        },
+      },
+      "my-app"
+    );
+
+    expect(result.scripts).toEqual({ dev: "next dev" });
+  });
+
   it("renames, resets the version, and drops the scaffolder script", () => {
     const result = rewritePackageJson(
       {

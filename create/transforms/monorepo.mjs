@@ -142,6 +142,12 @@ function restructureFiles(dir) {
   }
 
   cpSync(TEMPLATE_ROOT, dir, { recursive: true });
+
+  // npm drops a file literally named .gitignore from the published tarball, so
+  // the template ships it undotted and it gets its real name here. Without
+  // this the workspace keeps the single-app ignore rules, whose anchored
+  // patterns miss apps/*/node_modules — and the initial commit swallows them.
+  renameSync(join(dir, "gitignore"), join(dir, ".gitignore"));
 }
 
 function rewriteWorkspaceImports(dir) {

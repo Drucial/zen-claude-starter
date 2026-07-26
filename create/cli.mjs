@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { excludedFeatures, FEATURES } from "./features.mjs";
+import { excludedFeatures, FEATURE_IDS, FEATURES } from "./features.mjs";
 import { LAYOUTS } from "./layouts.mjs";
 import {
   findLocalTemplate,
@@ -34,6 +34,14 @@ import { BACK, runWizard } from "./wizard.mjs";
 // Null when installed from npm: there is no checkout, so the template is
 // downloaded instead.
 const LOCAL_TEMPLATE = findLocalTemplate();
+
+// The directory being built, once it exists. Interrupt and error handling read
+// this to decide whether there is anything to undo.
+let scaffolded = "";
+
+// The child currently running, so an interrupt can stop it before deleting the
+// directory it is writing into.
+let running = null;
 // A valid npm package name: lowercase, starts alphanumeric, hyphen-separated.
 const NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
@@ -76,12 +84,14 @@ function run(command, args, cwd) {
       cwd,
       stdio: ["ignore", "pipe", "pipe"],
     });
+    running = child;
     let output = "";
 
     child.stdout.on("data", (chunk) => (output += chunk));
     child.stderr.on("data", (chunk) => (output += chunk));
     child.on("error", reject);
     child.on("close", (code) => {
+      running = null;
       if (code === 0) resolve(output);
       else reject(new Error(`${command} exited with ${code}\n${output}`));
     });
@@ -173,8 +183,13 @@ function buildSteps({
     {
       key: "excluded",
       skip: () => excludedFlags.size > 0,
-      run: async (_values, options) => {
-        const selected = await multiselect("Include", FEATURES, options);
+      run: async (values, options) => {
+        const selected = await multiselect("Include", FEATURES, {
+          ...options,
+          selected: values.excluded
+            ? new Set(FEATURE_IDS.filter((id) => !values.excluded.includes(id)))
+            : undefined,
+        });
 
         return selected === BACK ? BACK : excludedFeatures(selected);
       },
@@ -185,7 +200,8 @@ function buildSteps({
       run: (values, options) =>
         text("Location", {
           ...options,
-          initial: values.parent ?? defaultParent,
+          initial: values.parent ?? "",
+          placeholder: defaultParent,
         }),
     },
     {
@@ -200,11 +216,13 @@ function buildSteps({
   ];
 }
 
-function summarise(values, steps) {
+function summarise(values, steps, editing) {
   const rows = [];
 
   for (const step of steps) {
-    if (!(step.key in values)) continue;
+    // The step being asked keeps its answer so the prompt can prefill it, but
+    // showing it as settled above the question it answers reads as a bug.
+    if (!(step.key in values) || step.key === editing) continue;
     if (step.key === "name") rows.push(["name", values.name]);
     if (step.key === "monorepo") {
       rows.push(["layout", values.monorepo ? "monorepo" : "single app"]);
@@ -228,6 +246,9 @@ async function main() {
   } = parseArgs(process.argv.slice(2));
 
   if (!hasCommand("git")) die("git is required");
+  if (!hasCommand("pnpm")) {
+    die("pnpm is required — see https://pnpm.io/installation");
+  }
 
   // Without a terminal there is nobody to answer a prompt, and a pending
   // question would hang until stdin closed. Take the defaults instead.
@@ -260,7 +281,8 @@ async function main() {
 
     await runWizard(steps, {
       values: answers,
-      onStep: (values) => renderAnswers(summarise(values, steps)),
+      onStep: (values, editing) =>
+        renderAnswers(summarise(values, steps, editing)),
     });
   }
 
@@ -278,6 +300,8 @@ async function main() {
   const target = join(resolve(parent), name);
   if (existsSync(target)) die(`destination already exists: ${target}`);
 
+  // From here on the directory exists, so an interrupt has something to undo.
+  scaffolded = target;
   process.stdout.write("\n");
 
   await task(
@@ -296,26 +320,25 @@ async function main() {
     finalizeDocs(target);
   });
 
-  // Install before the first commit: the monorepo layout invalidates the
-  // template's lockfile, and CI installs with --frozen-lockfile.
-  if (hasCommand("pnpm")) {
-    await task("installing dependencies", () =>
-      run("pnpm", ["install"], target)
-    );
+  // Before the first commit, so the committed lockfile matches the pruned
+  // package.json. CI installs with --frozen-lockfile and would reject a stale
+  // one on the user's very first push.
+  await task("installing dependencies", () => run("pnpm", ["install"], target));
 
-    // Moving files across package boundaries changes which import-sort group a
-    // specifier belongs to, so hand the result to the project's own autofix
-    // rather than re-sorting during the rewrite.
-    try {
-      await task("formatting", () => run("pnpm", ["fix"], target));
-    } catch {
-      process.stderr.write(
-        `  ${muted("'pnpm fix' reported problems — run it again in the new project.")}\n`
-      );
-    }
-  } else {
-    process.stdout.write(
-      `  ${muted("pnpm not found — run 'pnpm install' in the new project.")}\n`
+  // Moving files across package boundaries changes which import-sort group a
+  // specifier belongs to, so hand the result to the project's own autofix
+  // rather than re-sorting during the rewrite. Run the two halves separately:
+  // `pnpm fix` chains them, so an unfixable lint error would skip formatting
+  // and commit an unformatted tree.
+  const unfixed = [];
+  await task("formatting", async () => {
+    await run("pnpm", ["lint:fix"], target).catch(() => unfixed.push("lint"));
+    await run("pnpm", ["format"], target).catch(() => unfixed.push("format"));
+  });
+
+  if (unfixed.length) {
+    process.stderr.write(
+      `  ${muted(`pnpm ${unfixed.join(" and ")} reported problems — run pnpm check in the new project.`)}\n`
     );
   }
 
@@ -343,9 +366,38 @@ async function main() {
   process.stdout.write("\n");
 }
 
+/**
+ * Remove a half-built project. Interrupting during install leaves a full tree
+ * and a partial node_modules behind, and the next run would refuse to start
+ * because the destination now exists.
+ */
+function cleanUp() {
+  if (!scaffolded) return "";
+
+  // pnpm keeps writing into node_modules while we delete it, which surfaces as
+  // ENOTEMPTY. Stop it first, and let rmSync retry whatever lands in between.
+  running?.kill("SIGKILL");
+  running = null;
+
+  try {
+    rmSync(scaffolded, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 100,
+    });
+  } catch {
+    return "";
+  }
+
+  return scaffolded;
+}
+
 function cancel() {
+  const removed = cleanUp();
+
   process.stdout.write(
-    `\n  ${muted("Cancelled — nothing was installed.")}\n\n`
+    `\n  ${muted(removed ? `Cancelled — removed ${removed}` : "Cancelled.")}\n\n`
   );
   process.exit(130);
 }
@@ -361,6 +413,7 @@ try {
 
   // A stack trace is noise for the person running a scaffolder. Keep it behind
   // a flag rather than dumping it over the prompts.
+  cleanUp();
   if (process.env.ZEN_DEBUG) throw error;
   die(error.message);
 }

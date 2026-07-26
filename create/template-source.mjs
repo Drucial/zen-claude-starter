@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -61,7 +62,8 @@ function withStaging(work) {
  * Copy the checkout's tracked files, including uncommitted work and excluding
  * everything gitignored. `git stash create` writes a throwaway commit of the
  * working tree without touching it; it prints nothing when the tree is clean,
- * in which case HEAD is already what we want.
+ * in which case HEAD is already what we want. It records tracked files only,
+ * so untracked ones are copied separately.
  */
 function materializeLocal(templateDir, target) {
   let snapshot = "";
@@ -83,6 +85,24 @@ function materializeLocal(templateDir, target) {
     );
     untar(archive, target);
   });
+
+  copyUntracked(templateDir, target);
+}
+
+/**
+ * `git stash create` only records changes to tracked files, so a brand new
+ * component would be missing from the snapshot while the edit that imports it
+ * came through — a scaffold that fails to build for no visible reason. Copy
+ * those across too, still honouring .gitignore.
+ */
+function copyUntracked(templateDir, target) {
+  const listed = git(templateDir, "ls-files", "--others", "--exclude-standard");
+
+  for (const file of listed.split("\n").filter(Boolean)) {
+    const destination = join(target, file);
+    mkdirSync(dirname(destination), { recursive: true });
+    copyFileSync(join(templateDir, file), destination);
+  }
 }
 
 /** Download a published tag straight from GitHub — no checkout required. */

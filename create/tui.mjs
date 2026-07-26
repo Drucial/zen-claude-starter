@@ -51,6 +51,32 @@ export function note(label, value) {
   write(`  ${muted(label.padEnd(10))} ${value}\n`);
 }
 
+const ESC = String.fromCharCode(27);
+
+/** Width a line occupies once the terminal has eaten its colour escapes. */
+function visibleWidth(line) {
+  return line
+    .split(ESC)
+    .map((part, index) =>
+      index === 0 ? part : part.replace(/^\[[0-9;?]*[A-Za-z]/, "")
+    )
+    .join("").length;
+}
+
+/**
+ * How many terminal rows a block of lines occupies. Counting the lines instead
+ * would under-clear the moment one of them wraps — a long target path in the
+ * confirmation title, say — leaving a fragment behind on every repaint.
+ */
+function rows(lines) {
+  const width = process.stdout.columns || 80;
+
+  return lines.reduce(
+    (total, line) => total + Math.max(1, Math.ceil(visibleWidth(line) / width)),
+    0
+  );
+}
+
 let answersHeight = 0;
 
 /**
@@ -61,11 +87,13 @@ let answersHeight = 0;
 export function renderAnswers(answers) {
   if (answersHeight) write(`${CSI}${answersHeight}A${CSI}0J`);
 
-  for (const [label, value] of answers) {
-    write(`  ${accent("✓")}  ${muted(label.padEnd(10))} ${value}\n`);
-  }
+  const lines = answers.map(
+    ([label, value]) => `  ${accent("✓")}  ${muted(label.padEnd(10))} ${value}`
+  );
 
-  answersHeight = answers.length;
+  for (const line of lines) write(`${line}\n`);
+
+  answersHeight = rows(lines);
 }
 
 const SPINNER = ["◐", "◓", "◑", "◒"];
@@ -140,7 +168,7 @@ async function keyLoop({ render, onKey }) {
     if (height) write(`${CSI}${height}A${CSI}0J`);
     const lines = render();
     write(`${lines.join("\n")}\n`);
-    height = lines.length;
+    height = rows(lines);
   };
 
   let onKeypress;
@@ -220,9 +248,15 @@ export async function select(label, choices, { canGoBack = false } = {}) {
   return back ? BACK : choices[cursor];
 }
 
-export async function multiselect(label, choices, { canGoBack = false } = {}) {
+export async function multiselect(
+  label,
+  choices,
+  { canGoBack = false, selected: initial } = {}
+) {
   const width = pad(choices);
-  let selected = new Set(choices.map((choice) => choice.id));
+  // Everything on unless the caller is restoring an earlier answer — stepping
+  // back into this prompt must not silently re-check what was turned off.
+  let selected = new Set(initial ?? choices.map((choice) => choice.id));
   let cursor = 0;
   let back = false;
 
@@ -273,14 +307,19 @@ export async function multiselect(label, choices, { canGoBack = false } = {}) {
  */
 export async function text(
   label,
-  { initial = "", validate, canGoBack = false } = {}
+  { initial = "", placeholder = "", validate, canGoBack = false } = {}
 ) {
   let value = initial;
   let problem = "";
   let back = false;
 
+  // A default belongs in the placeholder, not the buffer: prefilled text looks
+  // identical but typing extends it, so someone entering a path silently gets
+  // it appended to the default rather than replacing it.
+  const answer = () => value || placeholder;
+
   const render = () => [
-    `  ${bold(label)} ${muted("›")} ${value}${accent("█")}`,
+    `  ${bold(label)} ${muted("›")} ${value || muted(placeholder)}${accent("█")}`,
     problem ? `  ${muted(problem)}` : "",
     `  ${muted(hint("enter confirm", canGoBack, "esc back"))}`,
   ];
@@ -295,7 +334,7 @@ export async function text(
       }
 
       if (key.name === "return") {
-        problem = validate?.(value) ?? "";
+        problem = validate?.(answer()) ?? "";
 
         return !problem;
       }
@@ -307,5 +346,5 @@ export async function text(
     },
   });
 
-  return back ? BACK : value;
+  return back ? BACK : answer();
 }

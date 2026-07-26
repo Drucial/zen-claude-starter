@@ -18,12 +18,19 @@ export function toTitleCase(name) {
     .join(" ");
 }
 
+/**
+ * Scripts that only make sense in the template repo. Both point into
+ * directories trim.mjs deletes, so leaving them behind gives a new project a
+ * command that fails on a missing module.
+ */
+const TEMPLATE_ONLY_SCRIPTS = ["create-project", "release"];
+
 export function rewritePackageJson(pkg, name) {
   const next = { ...pkg, name, version: "0.1.0" };
 
   if (next.scripts) {
     next.scripts = { ...next.scripts };
-    delete next.scripts["create-project"];
+    for (const script of TEMPLATE_ONLY_SCRIPTS) delete next.scripts[script];
   }
 
   return next;

@@ -201,6 +201,9 @@ describe("applyMonorepo", () => {
   });
 
   it("ignores dependencies and build output inside every package", () => {
+    // Shipped undotted so npm keeps it; the transform restores the real name.
+    expect(existsSync(join(dir, "gitignore"))).toBe(false);
+
     const lines = readFileSync(join(dir, ".gitignore"), "utf8").split("\n");
 
     // Root-anchored patterns would leave apps/web/node_modules and

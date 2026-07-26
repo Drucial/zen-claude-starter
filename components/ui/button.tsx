@@ -45,18 +45,24 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  type,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
   }) {
   const Comp = asChild ? Slot.Root : "button";
+  // Radix's Slot forwards no type, and a bare <button> inside a form defaults
+  // to submit — so a Cancel button would submit the form it sits in. Left
+  // undefined under asChild, where the child element owns its own attributes.
+  const buttonType = asChild ? type : (type ?? "button");
 
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
       data-size={size}
+      type={buttonType}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
