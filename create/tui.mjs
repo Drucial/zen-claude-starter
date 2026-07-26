@@ -113,7 +113,10 @@ export function toggle(selected, id) {
   return next;
 }
 
-const hint = (keys, canGoBack) => (canGoBack ? `${keys} · esc back` : keys);
+const hint = (keys, canGoBack, back = "← back") =>
+  canGoBack ? `${keys} · ${back}` : keys;
+
+const isBack = (key) => key.name === "escape" || key.name === "left";
 
 const pad = (choices) =>
   Math.max(...choices.map((choice) => choice.label.length)) + 2;
@@ -123,7 +126,10 @@ const pad = (choices) =>
  * read in raw mode, so the caller must only reach here with a real terminal.
  */
 async function keyLoop({ render, onKey }) {
-  emitKeypressEvents(process.stdin);
+  // Node waits half a second on a lone escape to see whether an arrow-key
+  // sequence follows. That delay is the whole feel of "go back", so shorten it
+  // to the point where a split sequence is still unlikely.
+  emitKeypressEvents(process.stdin, { escapeCodeTimeout: 50 });
   const wasRaw = Boolean(process.stdin.isRaw);
   process.stdin.setRawMode(true);
   process.stdin.resume();
@@ -199,7 +205,7 @@ export async function select(label, choices, { canGoBack = false } = {}) {
         cursor = moveCursor(cursor, -1, choices.length);
       } else if (key.name === "down" || key.name === "j") {
         cursor = moveCursor(cursor, 1, choices.length);
-      } else if (canGoBack && key.name === "escape") {
+      } else if (canGoBack && isBack(key)) {
         back = true;
 
         return true;
@@ -246,7 +252,7 @@ export async function multiselect(label, choices, { canGoBack = false } = {}) {
         cursor = moveCursor(cursor, 1, choices.length);
       } else if (key.name === "space") {
         selected = toggle(selected, choices[cursor].id);
-      } else if (canGoBack && key.name === "escape") {
+      } else if (canGoBack && isBack(key)) {
         back = true;
 
         return true;
@@ -274,9 +280,9 @@ export async function text(
   let back = false;
 
   const render = () => [
-    `  ${bold(label)} ${muted("›")} ${value}${accent("▏")}`,
+    `  ${bold(label)} ${muted("›")} ${value}${accent("█")}`,
     problem ? `  ${muted(problem)}` : "",
-    `  ${muted(hint("enter confirm", canGoBack))}`,
+    `  ${muted(hint("enter confirm", canGoBack, "esc back"))}`,
   ];
 
   await keyLoop({
