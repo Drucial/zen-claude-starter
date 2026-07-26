@@ -17,8 +17,13 @@ export function previousStep(steps, index, values) {
  *
  * A step whose `skip` returns true is passed over — that's how an answer given
  * on the command line removes its prompt, and it keeps "back" from landing on a
- * question the user never saw. When a step returns BACK, its own answer and
- * everything after it is discarded so the summary can't show a stale value.
+ * question the user never saw. When a step returns BACK, the answers after the
+ * one it lands on are discarded, so the summary can't show a stale value. The
+ * landed-on answer survives, so the prompt can offer it back as a default —
+ * going back to fix a typo shouldn't mean retyping the whole thing.
+ *
+ * `onStep` receives the key of the question about to be asked, so the caller
+ * can leave it out of the summary while the user is editing it.
  */
 export async function runWizard(steps, { values = {}, onStep } = {}) {
   let index = 0;
@@ -31,7 +36,7 @@ export async function runWizard(steps, { values = {}, onStep } = {}) {
       continue;
     }
 
-    onStep?.(values);
+    onStep?.(values, step.key);
     const answer = await step.run(values, {
       canGoBack: previousStep(steps, index, values) !== null,
     });
@@ -43,7 +48,7 @@ export async function runWizard(steps, { values = {}, onStep } = {}) {
 
       // Skipped steps hold answers that came from the command line — going
       // back must not clear a question the user was never asked.
-      for (const later of steps.slice(target)) {
+      for (const later of steps.slice(target + 1)) {
         if (!isSkipped(later, values)) delete values[later.key];
       }
       index = target;

@@ -71,7 +71,7 @@ describe("runWizard", () => {
     expect(values).toEqual({ a: "second", b: "two" });
   });
 
-  it("discards the answer of the step it returns to, and everything after", async () => {
+  it("keeps the answer of the step it returns to, so the prompt can prefill it", async () => {
     const seen = [];
     let visits = 0;
     const values = await runWizard([
@@ -79,7 +79,6 @@ describe("runWizard", () => {
       {
         key: "b",
         run: (current) => {
-          // On the retry, b's own stale answer and c's must both be gone.
           seen.push({ ...current });
 
           return Promise.resolve(seen.length === 1 ? "two" : "two-again");
@@ -91,9 +90,43 @@ describe("runWizard", () => {
       },
     ]);
 
+    // Coming back to b, its own answer survives so the field isn't blank.
     expect(seen[0]).toEqual({ a: "one" });
-    expect(seen[1]).toEqual({ a: "one" });
+    expect(seen[1]).toEqual({ a: "one", b: "two" });
     expect(values).toEqual({ a: "one", b: "two-again", c: "three" });
+  });
+
+  it("discards the answers after the step it returns to", async () => {
+    let visits = 0;
+    const seenByC = [];
+    const values = await runWizard([
+      scripted("a", ["one", "one-again"], []),
+      {
+        key: "b",
+        run: () => Promise.resolve(++visits === 1 ? BACK : "two"),
+      },
+      {
+        key: "c",
+        run: (current) => {
+          seenByC.push({ ...current });
+
+          return Promise.resolve("three");
+        },
+      },
+    ]);
+
+    // b and c both sit after a, so neither carries a stale value into the retry.
+    expect(seenByC).toHaveLength(1);
+    expect(values).toEqual({ a: "one-again", b: "two", c: "three" });
+  });
+
+  it("names the step being asked, so the caller can leave it out of the summary", async () => {
+    const editing = [];
+    await runWizard([scripted("a", ["one"], []), scripted("b", ["two"], [])], {
+      onStep: (_values, key) => editing.push(key),
+    });
+
+    expect(editing).toEqual(["a", "b", undefined]);
   });
 
   it("stays put when the first step asks to go back", async () => {
