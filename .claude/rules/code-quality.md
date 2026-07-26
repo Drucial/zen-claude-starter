@@ -58,11 +58,12 @@ hard conventions for this repo — not conditional on stack.
   (include the item it acts on, e.g. `Check ${name}`) or an associated `<label>`.
   Generic labels ("Expand", "Edit") are ambiguous in lists — name the target.
   Never ship an unlabeled control.
-- **`nativeButton={false}` when rendering a Base UI button as a non-button.**
-  Base UI button-like primitives (`Button`, `Tabs.Tab`, etc.) default
-  `nativeButton` to `true` and throw a console error when their `render` prop is
-  an `<a>`/`<Link>`. Whenever you pass `render={<Link …/>}` (or any non-`<button>`)
-  to one, set `nativeButton={false}`.
+- **`asChild` when a primitive should render as something else.** To make a
+  `Button` an `<a>`/`<Link>`, or a `DropdownMenuTrigger` wrap a `Button`, pass
+  `asChild` and put the real element inside — don't nest a `<button>` in an
+  `<a>`. Radix merges its props onto that child, so `asChild` takes exactly one
+  element child that forwards `ref` and spreads props; text, fragments, and
+  multiple children break it. Move the visible content inside the child element.
 
 ## Constants
 

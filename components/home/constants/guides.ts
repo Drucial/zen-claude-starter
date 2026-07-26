@@ -9,7 +9,7 @@ export const GUIDES: Guide[] = [
   {
     title: "Add a UI component",
     description:
-      "Vendor a shadcn primitive into components/ui with the base-nova style, then compose it — pass props and variants instead of restyling.",
+      "Vendor a shadcn primitive into components/ui with the new-york style, then compose it — pass props and variants instead of restyling.",
     language: "bash",
     code: "pnpm dlx shadcn@latest add card dialog",
   },

@@ -16,13 +16,14 @@ export function HomeNav() {
         </a>
         <div className="flex items-center gap-1">
           <Button
+            asChild
             aria-label="GitHub repository"
-            nativeButton={false}
-            render={<a href={GITHUB_URL} rel="noreferrer" target="_blank" />}
             size="icon"
             variant="ghost"
           >
-            <GitHubIcon className="size-4" />
+            <a href={GITHUB_URL} rel="noreferrer" target="_blank">
+              <GitHubIcon className="size-4" />
+            </a>
           </Button>
           <ModeToggle />
         </div>
