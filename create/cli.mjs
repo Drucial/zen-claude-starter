@@ -6,6 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
+import { LAYOUTS, selectLayout } from "./layouts.mjs";
 import { resolveTemplate } from "./template-source.mjs";
 import { rewriteIdentity } from "./transforms/identity.mjs";
 import { applyMonorepo } from "./transforms/monorepo.mjs";
@@ -22,8 +23,8 @@ Usage: pnpm create-project [name] [parent-dir] [--monorepo] [--yes]
 
   name         Project name (lowercase letters, digits, hyphens). Prompted if omitted.
   parent-dir   Directory to create the project in. Prompted if omitted.
-      --monorepo   Scaffold a Turborepo workspace instead of a single app.
-  -y, --yes    Skip the confirmation prompt.
+      --monorepo   Scaffold a Turborepo workspace. Prompted if omitted.
+  -y, --yes    Skip the prompts and take the defaults (single app).
 `;
 
 function die(message) {
@@ -76,11 +77,30 @@ function expandHome(path) {
   return path.startsWith("~") ? join(homedir(), path.slice(1)) : path;
 }
 
+async function promptLayout(rl) {
+  process.stdout.write("\nLayout:\n");
+  LAYOUTS.forEach((layout, index) => {
+    process.stdout.write(
+      `  ${index + 1}) ${layout.label.padEnd(12)}${layout.detail}\n`
+    );
+  });
+
+  let layout;
+  while (!layout) {
+    layout = selectLayout(await rl.question("Choose [1]: "));
+    if (!layout) {
+      process.stdout.write(`Enter a number from 1 to ${LAYOUTS.length}.\n`);
+    }
+  }
+
+  return layout.monorepo;
+}
+
 async function main() {
   const {
     name: nameArg,
     parent: parentArg,
-    monorepo,
+    monorepo: monorepoFlag,
     skipConfirm,
   } = parseArgs(process.argv.slice(2));
 
@@ -89,11 +109,15 @@ async function main() {
     die("must be run from inside the template git repository");
   }
 
+  // Without a terminal there is nobody to answer a prompt, and a pending
+  // question would hang until stdin closed. Take the defaults instead.
+  const canPrompt = Boolean(process.stdin.isTTY) && !skipConfirm;
   const rl = createInterface({ input: process.stdin, output: process.stdout });
 
   try {
     let name = nameArg;
     while (!NAME_PATTERN.test(name)) {
+      if (!canPrompt) die("a project name is required (see --help)");
       if (name) {
         process.stdout.write(
           "Invalid name. Use lowercase letters, digits, and hyphens.\n"
@@ -104,12 +128,15 @@ async function main() {
       ).trim();
     }
 
+    // --monorepo answers the prompt outright.
+    const monorepo = monorepoFlag || (canPrompt && (await promptLayout(rl)));
+
     const defaultParent = resolve(TEMPLATE_DIR, "..");
     let parent = parentArg;
     if (!parent) {
-      const answer = await rl.question(
-        `Create in which directory? [${defaultParent}]: `
-      );
+      const answer = canPrompt
+        ? await rl.question(`Create in which directory? [${defaultParent}]: `)
+        : "";
       parent = answer.trim() || defaultParent;
     }
 
@@ -131,7 +158,7 @@ async function main() {
       `Layout   : ${monorepo ? "monorepo (apps/web + packages/*)" : "single app"}`
     );
 
-    if (!skipConfirm) {
+    if (canPrompt) {
       const confirm = (await rl.question("Proceed? [Y/n]: ")).trim() || "Y";
       if (!/^y/i.test(confirm)) {
         process.stdout.write("Aborted.\n");

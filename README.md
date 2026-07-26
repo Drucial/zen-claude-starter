@@ -29,12 +29,18 @@ going — the page hot-reloads.
 Stamp this methodology into a fresh, git-initialized repo:
 
 ```bash
-pnpm create-project my-app              # single app
-pnpm create-project my-app --monorepo   # Turborepo workspace
+pnpm create-project                     # prompts for everything
+pnpm create-project my-app --monorepo   # or answer up front
 ```
 
-Both prompt for a name and location, copy the template, install dependencies,
-and open with one clean commit. `--monorepo` splits the same code into
+Run bare and it asks for the layout, name, and location. Any answer you pass as
+an argument or flag skips its prompt, and `--yes` skips all of them and takes
+the defaults — a single app in the template's parent directory. Prompts are
+suppressed when stdin isn't a terminal, so CI runs fail fast on a missing name
+instead of hanging.
+
+Either way it copies the template, installs dependencies, formats, and opens
+with one clean commit. `--monorepo` splits the same code into
 `apps/web` and `packages/ui`, adds `@repo/eslint-config` and
 `@repo/typescript-config`, and points every root script at Turborepo — the
 script names and CI workflows are identical, so `pnpm check` means the same
