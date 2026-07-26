@@ -131,9 +131,22 @@ function bump(version, tag) {
   writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
 
   run("git", ["add", MANIFEST]);
-  run("git", ["commit", "-m", `Release ${tag}`]);
+
+  // The first release cuts the version the manifest already carries, so there
+  // is nothing to commit and `git commit` would exit 1 — tag the commit that
+  // is already there instead of failing before the tag exists.
+  const committed = Boolean(run("git", ["diff", "--cached", "--name-only"]));
+
+  if (committed) {
+    run("git", ["commit", "-m", `Release ${tag}`]);
+    say(`  committed and tagged ${tag}`);
+  } else {
+    say(`  already at ${version} — tagging the current commit`);
+  }
+
   run("git", ["tag", "-a", tag, "-m", `Release ${tag}`]);
-  say(`  committed and tagged ${tag}`);
+
+  return committed;
 }
 
 async function confirm(question) {
@@ -178,7 +191,7 @@ async function main() {
     return;
   }
 
-  bump(version, tag);
+  const committed = bump(version, tag);
 
   // The tag has to be on GitHub before the package that points at it is
   // installable, so push first and only then publish.
@@ -186,10 +199,13 @@ async function main() {
   say("  the tag must reach GitHub before the package that points at it");
 
   if (!(await confirm(`  Push ${tag} and publish ${version}? [y/N] `))) {
-    say(
-      `\n  Stopped. The commit and tag are local — undo with:\n` +
-        `    git tag -d ${tag} && git reset --hard HEAD~1\n`
-    );
+    // Only offer to drop a commit when one was made. Suggesting it otherwise
+    // would throw away whatever the user last committed.
+    const undo = committed
+      ? `git tag -d ${tag} && git reset --hard HEAD~1`
+      : `git tag -d ${tag}`;
+
+    say(`\n  Stopped. Nothing left this machine — undo with:\n    ${undo}\n`);
 
     return;
   }
