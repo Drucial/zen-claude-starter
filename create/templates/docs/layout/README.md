@@ -29,3 +29,6 @@ package rather than the app:
 ```bash
 cd packages/ui && pnpm dlx shadcn@latest add card
 ```
+
+Deploying a workspace: point Vercel's **Root Directory** at `apps/web` and let
+it detect the rest.

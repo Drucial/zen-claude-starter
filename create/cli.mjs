@@ -12,6 +12,7 @@ import {
   TEMPLATE_REF,
 } from "./template-source.mjs";
 import { rewriteIdentity } from "./transforms/identity.mjs";
+import { finalizeDocs } from "./transforms/markdown-blocks.mjs";
 import { applyMonorepo } from "./transforms/monorepo.mjs";
 import { pruneFeatures } from "./transforms/prune-features.mjs";
 import { trimTemplate } from "./transforms/trim.mjs";
@@ -291,6 +292,8 @@ async function main() {
     trimTemplate(target);
     pruneFeatures(target, excluded);
     if (monorepo) applyMonorepo(target, name);
+    // Last: every swap is done, so the markers have nothing left to mark.
+    finalizeDocs(target);
   });
 
   // Install before the first commit: the monorepo layout invalidates the

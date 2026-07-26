@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -48,6 +48,33 @@ export function swapBlock(markdown, block, replacement) {
     pattern,
     `${start}\n\n${replacement.trim()}\n\n${end}`
   );
+}
+
+const TEMPLATE_ONLY =
+  /\n*<!-- template-only:start -->[\s\S]*?<!-- template-only:end -->\n*/g;
+
+/** Sections about maintaining the template, which a project made from it has no use for. */
+export function stripTemplateOnly(markdown) {
+  return markdown.replace(TEMPLATE_ONLY, "\n\n");
+}
+
+const ANY_MARKER = /^[^\S\n]*<!-- [\w-]+:(?:start|end) -->\n/gm;
+
+/**
+ * Drop the swap markers once every swap has happened. They mean nothing in a
+ * generated project, and CLAUDE.md is read as plain text by Claude Code.
+ */
+export function stripBlockMarkers(markdown) {
+  return markdown.replace(ANY_MARKER, "").replace(/\n{3,}/g, "\n\n");
+}
+
+export function finalizeDocs(dir) {
+  for (const file of new Set(Object.values(DOC_BLOCKS).flat())) {
+    const path = join(dir, file);
+    if (!existsSync(path)) continue;
+
+    writeFileSync(path, stripBlockMarkers(readFileSync(path, "utf8")));
+  }
 }
 
 export function readReplacement(block, file) {
