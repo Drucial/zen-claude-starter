@@ -14,8 +14,9 @@ export function HomeNav() {
       <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
         <Link className="flex items-center gap-2" href="/">
           <BrandMark className="text-foreground size-6" />
-          <span className="text-sm font-semibold tracking-tight">zen</span>
-          <span className="text-muted-foreground text-sm">starter</span>
+          <span className="text-sm font-semibold tracking-tight">
+            zen<span className="text-muted-foreground">start</span>
+          </span>
         </Link>
         <div className="flex items-center gap-1">
           <div className="text-muted-foreground mr-2 hidden items-center gap-4 text-sm sm:flex">

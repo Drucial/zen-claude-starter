@@ -8,7 +8,9 @@ export function HomeFooter() {
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-4 py-10 sm:flex-row sm:px-6">
         <div className="text-muted-foreground flex items-center gap-2 text-sm">
           <BrandMark className="text-foreground size-5" />
-          <span className="text-foreground font-medium">zen starter</span>
+          <span className="text-foreground font-medium">
+            zen<span className="text-muted-foreground">start</span>
+          </span>
           <span>· built for calm work</span>
         </div>
         <div className="flex items-center gap-6">

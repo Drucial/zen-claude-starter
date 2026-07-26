@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "zen-claude-starter — a calm foundation for your next app";
+export const alt = "zenstart: a calm foundation for your next app";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -33,8 +33,12 @@ export default function OpengraphImage() {
             strokeWidth="2.6"
           />
         </svg>
-        <div style={{ fontSize: 40, letterSpacing: "-0.02em" }}>zen</div>
-        <div style={{ fontSize: 40, color: "#8f8f8f" }}>starter</div>
+        <div
+          style={{ display: "flex", fontSize: 40, letterSpacing: "-0.02em" }}
+        >
+          <div>zen</div>
+          <div style={{ color: "#8f8f8f" }}>start</div>
+        </div>
       </div>
       <div
         style={{

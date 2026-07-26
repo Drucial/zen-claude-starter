@@ -43,7 +43,7 @@ process.on("exit", () => {
 
 export function banner() {
   write(
-    `\n  ${accent("◐")}  ${bold("zen")}\n     ${muted("a calm foundation for your next app")}\n\n`
+    `\n  ${accent("◐")}  ${bold("zen")}${muted("start")}\n     ${muted("a calm foundation for your next app")}\n\n`
   );
 }
 
