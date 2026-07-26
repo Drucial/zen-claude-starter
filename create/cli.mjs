@@ -3,7 +3,6 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
 import { excludedFeatures, FEATURES } from "./features.mjs";
@@ -15,15 +14,18 @@ import { pruneFeatures } from "./transforms/prune-features.mjs";
 import { trimTemplate } from "./transforms/trim.mjs";
 import {
   accent,
-  answered,
   banner,
   bold,
+  CancelError,
   multiselect,
   muted,
   note,
+  renderAnswers,
   select,
   task,
+  text,
 } from "./tui.mjs";
+import { BACK, runWizard } from "./wizard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TEMPLATE_DIR = resolve(HERE, "..");
@@ -113,14 +115,102 @@ function expandHome(path) {
   return path.startsWith("~") ? join(homedir(), path.slice(1)) : path;
 }
 
-async function ask(question) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
+const CONFIRM = [
+  { id: "create", label: "Create it", detail: "Scaffold and install" },
+  {
+    id: "back",
+    label: "Change something",
+    detail: "Step back through the answers",
+  },
+];
 
-  try {
-    return (await rl.question(question)).trim();
-  } finally {
-    rl.close();
+function describeExcluded(excluded) {
+  return excluded.length === 0
+    ? "everything"
+    : `without ${excluded.join(", ")}`;
+}
+
+/**
+ * The questions, in order. `skip` removes the ones already answered on the
+ * command line, which also keeps "back" from landing on a question the user
+ * never saw.
+ */
+function buildSteps({
+  nameArg,
+  parentArg,
+  monorepoFlag,
+  excludedFlags,
+  defaultParent,
+}) {
+  return [
+    {
+      key: "name",
+      skip: () => NAME_PATTERN.test(nameArg),
+      run: (values, options) =>
+        text("Project name", {
+          ...options,
+          initial: values.name ?? "",
+          validate: (value) =>
+            NAME_PATTERN.test(value)
+              ? ""
+              : "Lowercase letters, digits, and hyphens; must start with a letter or digit.",
+        }),
+    },
+    {
+      key: "monorepo",
+      skip: () => monorepoFlag,
+      run: async (_values, options) => {
+        const choice = await select("Layout", LAYOUTS, options);
+
+        return choice === BACK ? BACK : choice.monorepo;
+      },
+    },
+    {
+      key: "excluded",
+      skip: () => excludedFlags.size > 0,
+      run: async (_values, options) => {
+        const selected = await multiselect("Include", FEATURES, options);
+
+        return selected === BACK ? BACK : excludedFeatures(selected);
+      },
+    },
+    {
+      key: "parent",
+      skip: () => Boolean(parentArg),
+      run: (values, options) =>
+        text("Location", {
+          ...options,
+          initial: values.parent ?? defaultParent,
+        }),
+    },
+    {
+      key: "confirmed",
+      run: async (values, options) => {
+        const target = join(expandHome(values.parent ?? ""), values.name ?? "");
+        const choice = await select(`Create ${target}?`, CONFIRM, options);
+
+        return choice === BACK || choice.id === "back" ? BACK : true;
+      },
+    },
+  ];
+}
+
+function summarise(values, steps) {
+  const rows = [];
+
+  for (const step of steps) {
+    if (!(step.key in values)) continue;
+    if (step.key === "name") rows.push(["name", values.name]);
+    if (step.key === "monorepo") {
+      rows.push(["layout", values.monorepo ? "monorepo" : "single app"]);
+    }
+    if (step.key === "excluded") {
+      rows.push(["include", describeExcluded(values.excluded)]);
+    }
+    if (step.key === "parent") rows.push(["location", values.parent]);
   }
+
+  return rows;
 }
 
 async function main() {
@@ -140,71 +230,48 @@ async function main() {
   // Without a terminal there is nobody to answer a prompt, and a pending
   // question would hang until stdin closed. Take the defaults instead.
   const canPrompt = Boolean(process.stdin.isTTY) && !skipPrompts;
-
-  if (canPrompt) banner();
-
-  let name = nameArg;
-  while (!NAME_PATTERN.test(name)) {
-    if (!canPrompt) die("a project name is required (see --help)");
-    if (name) {
-      process.stdout.write(
-        `  ${muted("Use lowercase letters, digits, and hyphens.")}\n`
-      );
-    }
-    name = await ask(`  ${bold("Project name")} ${muted("›")} `);
-  }
-  if (canPrompt) answered("name", name);
-
-  // A flag answers its prompt outright.
-  const monorepo = monorepoFlag
-    ? true
-    : canPrompt && (await select("Layout", LAYOUTS)).monorepo;
-  if (canPrompt) {
-    answered("layout", monorepo ? "monorepo" : "single app");
-  }
-
-  const excluded =
-    canPrompt && excludedFlags.size === 0
-      ? excludedFeatures(await multiselect("Include", FEATURES))
-      : [...excludedFlags];
-  if (canPrompt) {
-    answered(
-      "include",
-      excluded.length === 0
-        ? "everything"
-        : muted(`without ${excluded.join(", ")}`)
-    );
-  }
-
   const defaultParent = resolve(TEMPLATE_DIR, "..");
-  let parent = parentArg;
-  if (!parent) {
-    const answer = canPrompt
-      ? await ask(`  ${bold("Location")} ${muted(`› ${defaultParent}`)} `)
-      : "";
-    parent = answer || defaultParent;
+
+  if (!canPrompt && !NAME_PATTERN.test(nameArg)) {
+    die("a project name is required (see --help)");
   }
 
-  parent = expandHome(parent);
+  const answers = {};
+  if (NAME_PATTERN.test(nameArg)) answers.name = nameArg;
+  if (monorepoFlag) answers.monorepo = true;
+  if (excludedFlags.size > 0) answers.excluded = [...excludedFlags];
+  if (parentArg) answers.parent = parentArg;
+
+  if (canPrompt) {
+    banner();
+
+    const steps = buildSteps({
+      nameArg,
+      parentArg,
+      monorepoFlag,
+      excludedFlags,
+      defaultParent,
+    });
+
+    await runWizard(steps, {
+      values: answers,
+      onStep: (values) => renderAnswers(summarise(values, steps)),
+    });
+  }
+
+  const name = answers.name;
+  const monorepo = answers.monorepo ?? false;
+  const excluded = answers.excluded ?? [];
+  const parent = expandHome(answers.parent ?? defaultParent);
+
   try {
     mkdirSync(parent, { recursive: true });
   } catch {
     die(`cannot create parent directory: ${parent}`);
   }
-  parent = resolve(parent);
 
-  const target = join(parent, name);
+  const target = join(resolve(parent), name);
   if (existsSync(target)) die(`destination already exists: ${target}`);
-
-  if (canPrompt) {
-    process.stdout.write("\n");
-    note("creating", target);
-    const confirm = await ask(`  ${bold("Proceed?")} ${muted("› Y/n")} `);
-    if (confirm && !/^y/i.test(confirm)) {
-      process.stdout.write(`\n  ${muted("Nothing created.")}\n\n`);
-      process.exit(0);
-    }
-  }
 
   process.stdout.write("\n");
 
@@ -263,12 +330,24 @@ async function main() {
   process.stdout.write("\n");
 }
 
+function cancel() {
+  process.stdout.write(
+    `\n  ${muted("Cancelled — nothing was installed.")}\n\n`
+  );
+  process.exit(130);
+}
+
+// Raw mode swallows Ctrl+C, so prompts raise CancelError themselves. Outside a
+// prompt — during install, say — the signal arrives normally.
+process.on("SIGINT", cancel);
+
 try {
   await main();
 } catch (error) {
-  if (error.message === "cancelled") {
-    process.stdout.write(`\n\n  ${muted("Cancelled.")}\n\n`);
-    process.exit(130);
-  }
-  throw error;
+  if (error instanceof CancelError) cancel();
+
+  // A stack trace is noise for the person running a scaffolder. Keep it behind
+  // a flag rather than dumping it over the prompts.
+  if (process.env.ZEN_DEBUG) throw error;
+  die(error.message);
 }

@@ -1,5 +1,15 @@
 import { emitKeypressEvents } from "node:readline";
 
+import { BACK } from "./wizard.mjs";
+
+/** Thrown when the user interrupts a prompt, so callers can exit quietly. */
+export class CancelError extends Error {
+  constructor() {
+    super("cancelled");
+    this.name = "CancelError";
+  }
+}
+
 const CSI = "[";
 
 const CODES = {
@@ -23,6 +33,14 @@ export const bold = (text) => paint(CODES.bold, text);
 
 const write = (text) => process.stdout.write(text);
 
+const SHOW_CURSOR = `${CSI}?25h`;
+
+// Raw mode hides the cursor while a prompt is drawing. However the process
+// ends — clean exit, interrupt, or crash — it has to come back.
+process.on("exit", () => {
+  if (process.stdout.isTTY) write(SHOW_CURSOR);
+});
+
 export function banner() {
   write(
     `\n  ${accent("◐")}  ${bold("zen")}\n     ${muted("a calm foundation for your next app")}\n\n`
@@ -33,8 +51,21 @@ export function note(label, value) {
   write(`  ${muted(label.padEnd(10))} ${value}\n`);
 }
 
-export function answered(label, value) {
-  write(`  ${accent("✓")}  ${muted(label.padEnd(10))} ${value}\n`);
+let answersHeight = 0;
+
+/**
+ * Reprint the block of settled answers, replacing whatever is already there.
+ * Stepping back drops entries, so the block has to be rewritten rather than
+ * appended to.
+ */
+export function renderAnswers(answers) {
+  if (answersHeight) write(`${CSI}${answersHeight}A${CSI}0J`);
+
+  for (const [label, value] of answers) {
+    write(`  ${accent("✓")}  ${muted(label.padEnd(10))} ${value}\n`);
+  }
+
+  answersHeight = answers.length;
 }
 
 const SPINNER = ["◐", "◓", "◑", "◒"];
@@ -82,6 +113,8 @@ export function toggle(selected, id) {
   return next;
 }
 
+const hint = (keys, canGoBack) => (canGoBack ? `${keys} · esc back` : keys);
+
 const pad = (choices) =>
   Math.max(...choices.map((choice) => choice.label.length)) + 2;
 
@@ -109,16 +142,16 @@ async function keyLoop({ render, onKey }) {
   try {
     draw();
     await new Promise((resolve, reject) => {
-      onKeypress = (_input, key) => {
+      onKeypress = (input, key) => {
         if (!key) return;
 
         if (key.ctrl && key.name === "c") {
-          reject(new Error("cancelled"));
+          reject(new CancelError());
 
           return;
         }
 
-        if (onKey(key)) {
+        if (onKey(key, input)) {
           resolve();
 
           return;
@@ -132,15 +165,16 @@ async function keyLoop({ render, onKey }) {
     if (onKeypress) process.stdin.off("keypress", onKeypress);
     process.stdin.setRawMode(wasRaw);
     process.stdin.pause();
-    write(`${CSI}?25h`);
+    write(SHOW_CURSOR);
     // Collapse the block; the caller prints the chosen answer in its place.
     if (height) write(`${CSI}${height}A${CSI}0J`);
   }
 }
 
-export async function select(label, choices) {
+export async function select(label, choices, { canGoBack = false } = {}) {
   const width = pad(choices);
   let cursor = 0;
+  let back = false;
 
   const render = () => [
     `  ${bold(label)}`,
@@ -155,7 +189,7 @@ export async function select(label, choices) {
       return `  ${marker}  ${name}${muted(choice.detail)}`;
     }),
     "",
-    `  ${muted("↑↓ move · enter select")}`,
+    `  ${muted(hint("↑↓ move · enter select", canGoBack))}`,
   ];
 
   await keyLoop({
@@ -165,6 +199,10 @@ export async function select(label, choices) {
         cursor = moveCursor(cursor, -1, choices.length);
       } else if (key.name === "down" || key.name === "j") {
         cursor = moveCursor(cursor, 1, choices.length);
+      } else if (canGoBack && key.name === "escape") {
+        back = true;
+
+        return true;
       } else if (key.name === "return") {
         return true;
       }
@@ -173,13 +211,14 @@ export async function select(label, choices) {
     },
   });
 
-  return choices[cursor];
+  return back ? BACK : choices[cursor];
 }
 
-export async function multiselect(label, choices) {
+export async function multiselect(label, choices, { canGoBack = false } = {}) {
   const width = pad(choices);
   let selected = new Set(choices.map((choice) => choice.id));
   let cursor = 0;
+  let back = false;
 
   const render = () => [
     `  ${bold(label)}`,
@@ -195,7 +234,7 @@ export async function multiselect(label, choices) {
       return `  ${box}  ${name}${muted(choice.detail)}`;
     }),
     "",
-    `  ${muted("↑↓ move · space toggle · enter confirm")}`,
+    `  ${muted(hint("↑↓ move · space toggle · enter confirm", canGoBack))}`,
   ];
 
   await keyLoop({
@@ -207,6 +246,10 @@ export async function multiselect(label, choices) {
         cursor = moveCursor(cursor, 1, choices.length);
       } else if (key.name === "space") {
         selected = toggle(selected, choices[cursor].id);
+      } else if (canGoBack && key.name === "escape") {
+        back = true;
+
+        return true;
       } else if (key.name === "return") {
         return true;
       }
@@ -215,5 +258,48 @@ export async function multiselect(label, choices) {
     },
   });
 
-  return selected;
+  return back ? BACK : selected;
+}
+
+/**
+ * A single-line text field. Written in raw mode rather than with readline so
+ * that escape means "go back" here exactly as it does in the selectors.
+ */
+export async function text(
+  label,
+  { initial = "", validate, canGoBack = false } = {}
+) {
+  let value = initial;
+  let problem = "";
+  let back = false;
+
+  const render = () => [
+    `  ${bold(label)} ${muted("›")} ${value}${accent("▏")}`,
+    problem ? `  ${muted(problem)}` : "",
+    `  ${muted(hint("enter confirm", canGoBack))}`,
+  ];
+
+  await keyLoop({
+    render,
+    onKey: (key, input) => {
+      if (canGoBack && key.name === "escape") {
+        back = true;
+
+        return true;
+      }
+
+      if (key.name === "return") {
+        problem = validate?.(value) ?? "";
+
+        return !problem;
+      }
+
+      if (key.name === "backspace") value = value.slice(0, -1);
+      else if (input && !key.ctrl && !key.meta && input >= " ") value += input;
+
+      return false;
+    },
+  });
+
+  return back ? BACK : value;
 }
