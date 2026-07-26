@@ -1,3 +1,4 @@
+import { FAQ } from "./constants/faq";
 import { GITHUB_URL } from "./constants/links";
 import {
   AUTHOR_NAME,
@@ -39,6 +40,15 @@ const GRAPH = {
       runtimePlatform: "Next.js 16",
       license: "https://opensource.org/licenses/MIT",
       author: { "@id": AUTHOR_ID },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${SITE_URL}/#faq`,
+      mainEntity: FAQ.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: { "@type": "Answer", text: item.answer },
+      })),
     },
     {
       "@type": "SoftwareApplication",

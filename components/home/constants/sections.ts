@@ -8,4 +8,5 @@ export const SECTIONS: Section[] = [
   { href: "#rules", label: "Rules" },
   { href: "#stack", label: "Stack" },
   { href: "#start", label: "Get started" },
+  { href: "#faq", label: "FAQ" },
 ];

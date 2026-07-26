@@ -26,7 +26,7 @@ export function ScaffoldPlayground() {
         Start a project
       </h3>
       <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-        Pick a layout, name it, and run the command anywhere — no clone needed.
+        Pick a layout, name it, then run the command anywhere. No clone needed.
       </p>
       <div
         aria-label="Project layout"

@@ -11,10 +11,10 @@ export function Guides() {
     >
       <Reveal>
         <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Find your footing — scaffold an app or monorepo
+          Scaffold an app or a monorepo
         </h2>
         <p className="text-muted-foreground mt-4 text-lg leading-relaxed">
-          Start a project, then reach for the patterns you&apos;ll use on day
+          Start a project, then reach for the patterns you&apos;ll want on day
           one.
         </p>
       </Reveal>

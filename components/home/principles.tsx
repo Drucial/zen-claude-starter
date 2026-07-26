@@ -10,10 +10,10 @@ export function Principles() {
     >
       <Reveal className="mx-auto max-w-2xl text-center">
         <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Opinionated, on purpose
+          The small calls, already made
         </h2>
         <p className="text-muted-foreground mt-4 text-lg leading-relaxed">
-          Fewer decisions to make. More room to think.
+          You inherit the decisions that slow a project down at the start.
         </p>
       </Reveal>
       <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

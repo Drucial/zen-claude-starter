@@ -7,6 +7,7 @@ import {
   SITE_TITLE,
   SITE_URL,
 } from "@/components/home/constants/site";
+import { Faq } from "@/components/home/faq";
 import { Guides } from "@/components/home/guides";
 import { Hero } from "@/components/home/hero";
 import { HomeFooter } from "@/components/home/home-footer";
@@ -66,6 +67,7 @@ export default function Home() {
         <Rules />
         <Stack />
         <Guides />
+        <Faq />
       </main>
       <HomeFooter />
     </div>

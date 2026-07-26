@@ -29,8 +29,8 @@ export function Hero() {
         </h1>
         <p className="text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-3 mt-6 max-w-xl text-lg leading-relaxed text-pretty delay-100 duration-500">
           An opinionated starter that settles structure, data flow, and
-          conventions — with CLAUDE.md rules so your agent writes code that
-          already fits. Single app or Turborepo monorepo.
+          conventions, then hands your agent the CLAUDE.md rules to match.
+          Single app or Turborepo monorepo.
         </p>
         <div className="animate-in fade-in-0 slide-in-from-bottom-3 mt-9 delay-200 duration-500">
           <CommandPill command={CREATE_COMMAND} />

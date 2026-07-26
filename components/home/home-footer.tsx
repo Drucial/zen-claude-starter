@@ -9,7 +9,7 @@ export function HomeFooter() {
         <div className="text-muted-foreground flex items-center gap-2 text-sm">
           <BrandMark className="text-foreground size-5" />
           <span className="text-foreground font-medium">zen starter</span>
-          <span>· crafted for calm</span>
+          <span>· built for calm work</span>
         </div>
         <div className="flex items-center gap-6">
           <a

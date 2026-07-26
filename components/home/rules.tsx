@@ -13,7 +13,7 @@ export function Rules() {
             Rules Claude Code actually follows
           </h2>
           <p className="text-muted-foreground mt-4 text-lg leading-relaxed">
-            Conventions an agent can read, in a shape the toolchain can enforce.
+            Conventions your agent can read, in a shape the linter can enforce.
           </p>
         </Reveal>
         <dl className="mt-14 grid gap-x-10 gap-y-8 sm:grid-cols-2">
