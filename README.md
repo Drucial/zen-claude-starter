@@ -26,11 +26,19 @@ going — the page hot-reloads.
 
 ## Scaffolding a project
 
-Stamp this methodology into a fresh, git-initialized repo:
+Stamp this methodology into a fresh, git-initialized repo. From anywhere, with
+no clone:
 
 ```bash
-pnpm create-project                     # prompts for everything
-pnpm create-project my-app --monorepo   # or answer up front
+npx zen-claude-starter                  # prompts for everything
+npx zen-claude-starter my-app --monorepo
+```
+
+From inside this repo, the same scaffolder runs against your working copy —
+uncommitted template edits included:
+
+```bash
+pnpm create-project
 ```
 
 Run bare and it walks you through the name, layout, dependencies, and location
@@ -51,6 +59,21 @@ there.
 
 Prompts are suppressed when stdin isn't a terminal, so CI runs take the
 defaults and fail fast on a missing name instead of hanging.
+
+### Releasing the scaffolder
+
+`npx` downloads the template from the git tag the release was cut from, so a
+given version scaffolds the same project forever. That means the tag has to
+exist before the publish is usable:
+
+```bash
+# bump "version" and "zen.templateRef" in create/package.json together
+git tag v0.1.0 && git push --tags
+cd create && npm publish
+```
+
+The two fields are checked against each other by
+`create/__tests__/template-source.test.mjs`, so they can't drift.
 
 Either way it copies the template, installs dependencies, formats, and opens
 with one clean commit. `--monorepo` splits the same code into

@@ -29,8 +29,8 @@ snapshot.
 
 - A second app in the generated workspace. `apps/web` is the only app on day
   one; `packages/ui` proves the cross-package seam.
-- A published npm package. The CLI is shaped so publishing is the only
-  remaining step, but the `remote` template source isn't written yet.
+- Cutting the release itself. The CLI resolves a remote template, so what
+  remains is tagging a version and pushing the package to the registry.
 
 ## Output
 
@@ -93,11 +93,18 @@ create/
   __tests__/
 ```
 
-`template-source.mjs` exposes `resolveTemplate({ from })`. The `"local"`
-strategy is today's `git stash create` → `git archive | tar -x` snapshot, which
+`template-source.mjs` picks a strategy from where it finds itself. Inside the
+checkout it takes a `git stash create` → `git archive | tar -x` snapshot, which
 captures tracked files including uncommitted work while excluding everything
-gitignored. A `"remote"` strategy (GitHub tarball) drops into the same seam for
-the `npx` path.
+gitignored — editing the template and scaffolding from it needs no commit.
+
+Installed from the registry, `create/`'s contents become the package root, so
+the directory name is what distinguishes the two cases. With no checkout it
+downloads the GitHub source tarball for the tag the release was cut from
+(`zen.templateRef` in `create/package.json`, checked against the package
+version by a test). Pinning to a tag rather than the default branch is what
+makes a given version scaffold the same project months later, at the cost of a
+release step: main isn't live until a tag exists.
 
 ### The package manifest
 
@@ -154,8 +161,8 @@ shared and written once.
 ## Data flow
 
 ```
-template repo
-  └─ resolveTemplate({ from: "local" })   → target dir (tracked files, no gitignored paths)
+template (local checkout, or the GitHub tarball for the published tag)
+  └─ resolveTemplate()                    → target dir (tracked files, no gitignored paths)
        └─ identity transform              → project name, title, minimal page
             ├─ trim transform             → drop create/, components/home, docs/
             ├─ prune-features             → drop excluded deps, files, doc blocks
@@ -214,8 +221,12 @@ means `pnpm dlx shadcn@latest add …` run there vendors into the package.
 
 ## Error handling
 
-- Invalid project name, existing destination, missing `git`, running outside the
-  template repo: fail with a message before any filesystem writes.
+- Invalid project name, existing destination, missing `git`: fail with a message
+  before any filesystem writes.
+- An untagged or unreachable template ref: fail naming the ref, and say the
+  release may not be tagged yet — the likeliest cause by far.
+- Interrupting a prompt exits quietly; the terminal cursor is restored on every
+  exit path, and stack traces stay behind `ZEN_DEBUG`.
 - A dependency missing from the manifest throws during the transform, naming the
   package.
 - A renamed or missing marker block fails `markdown-blocks.test.mjs`.

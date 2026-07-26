@@ -2,12 +2,15 @@
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, resolve } from "node:path";
 
 import { excludedFeatures, FEATURES } from "./features.mjs";
 import { LAYOUTS } from "./layouts.mjs";
-import { resolveTemplate } from "./template-source.mjs";
+import {
+  findLocalTemplate,
+  resolveTemplate,
+  TEMPLATE_REF,
+} from "./template-source.mjs";
 import { rewriteIdentity } from "./transforms/identity.mjs";
 import { applyMonorepo } from "./transforms/monorepo.mjs";
 import { pruneFeatures } from "./transforms/prune-features.mjs";
@@ -27,8 +30,9 @@ import {
 } from "./tui.mjs";
 import { BACK, runWizard } from "./wizard.mjs";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const TEMPLATE_DIR = resolve(HERE, "..");
+// Null when installed from npm: there is no checkout, so the template is
+// downloaded instead.
+const LOCAL_TEMPLATE = findLocalTemplate();
 // A valid npm package name: lowercase, starts alphanumeric, hyphen-separated.
 const NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
@@ -223,14 +227,14 @@ async function main() {
   } = parseArgs(process.argv.slice(2));
 
   if (!hasCommand("git")) die("git is required");
-  if (!existsSync(join(TEMPLATE_DIR, ".git"))) {
-    die("must be run from inside the template git repository");
-  }
 
   // Without a terminal there is nobody to answer a prompt, and a pending
   // question would hang until stdin closed. Take the defaults instead.
   const canPrompt = Boolean(process.stdin.isTTY) && !skipPrompts;
-  const defaultParent = resolve(TEMPLATE_DIR, "..");
+  // Inside the checkout, siblings of the template. Otherwise, right here.
+  const defaultParent = LOCAL_TEMPLATE
+    ? resolve(LOCAL_TEMPLATE, "..")
+    : process.cwd();
 
   if (!canPrompt && !NAME_PATTERN.test(nameArg)) {
     die("a project name is required (see --help)");
@@ -275,8 +279,14 @@ async function main() {
 
   process.stdout.write("\n");
 
+  await task(
+    LOCAL_TEMPLATE ? "building the project" : `fetching ${TEMPLATE_REF}`,
+    async () => {
+      await resolveTemplate({ templateDir: LOCAL_TEMPLATE, target });
+    }
+  );
+
   await task("building the project", async () => {
-    resolveTemplate({ from: "local", templateDir: TEMPLATE_DIR, target });
     rewriteIdentity(target, name);
     trimTemplate(target);
     pruneFeatures(target, excluded);
