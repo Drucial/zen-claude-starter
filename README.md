@@ -24,6 +24,22 @@ pnpm dev
 Open [http://localhost:3000](http://localhost:3000). Edit `app/page.tsx` to get
 going — the page hot-reloads.
 
+## Scaffolding a project
+
+Stamp this methodology into a fresh, git-initialized repo:
+
+```bash
+pnpm create-project my-app              # single app
+pnpm create-project my-app --monorepo   # Turborepo workspace
+```
+
+Both prompt for a name and location, copy the template, install dependencies,
+and open with one clean commit. `--monorepo` splits the same code into
+`apps/web` and `packages/ui`, adds `@repo/eslint-config` and
+`@repo/typescript-config`, and points every root script at Turborepo — the
+script names and CI workflows are identical, so `pnpm check` means the same
+thing in both layouts.
+
 ## Scripts
 
 | Command              | What it does                                           |
@@ -39,6 +55,8 @@ going — the page hot-reloads.
 
 ## Project Structure
 
+<!-- layout:start -->
+
 ```
 app/          App Router routes, layouts, server components
 components/    Cross-feature components only
@@ -50,6 +68,8 @@ utils/        Global utilities (cn, …)
 context/      Global React context providers (create when needed)
 api/          External API clients (create when needed)
 ```
+
+<!-- layout:end -->
 
 ## Conventions
 

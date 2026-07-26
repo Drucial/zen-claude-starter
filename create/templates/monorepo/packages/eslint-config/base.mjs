@@ -1,50 +1,24 @@
 import js from "@eslint/js";
-import pluginNext from "@next/eslint-plugin-next";
 import stylistic from "@stylistic/eslint-plugin";
 import eslintConfigPrettier from "eslint-config-prettier";
 import pluginImport from "eslint-plugin-import";
-import pluginReact from "eslint-plugin-react";
-import pluginReactHooks from "eslint-plugin-react-hooks";
-import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import unusedImports from "eslint-plugin-unused-imports";
-import globals from "globals";
 import tseslint from "typescript-eslint";
 
-/** @type {import("eslint").Linter.Config} */
-export default [
+/** @type {import("eslint").Linter.Config[]} */
+export const base = [
   js.configs.recommended,
   eslintConfigPrettier,
   ...tseslint.configs.recommended,
   {
-    ...pluginReact.configs.flat.recommended,
-    languageOptions: {
-      ...pluginReact.configs.flat.recommended.languageOptions,
-      globals: {
-        ...globals.serviceworker,
-      },
-    },
-  },
-  {
     plugins: {
-      "@next/next": pluginNext,
-    },
-    rules: {
-      ...pluginNext.configs.recommended.rules,
-      ...pluginNext.configs["core-web-vitals"].rules,
-      "@next/next/no-async-client-component": "off",
-    },
-  },
-  {
-    plugins: {
-      "react-hooks": pluginReactHooks,
       "@stylistic": stylistic,
       "simple-import-sort": simpleImportSort,
       "unused-imports": unusedImports,
       import: pluginImport,
     },
     settings: {
-      react: { version: "detect" },
       "import/resolver": {
         typescript: {
           alwaysTryTypes: true,
@@ -52,10 +26,6 @@ export default [
       },
     },
     rules: {
-      ...pluginReactHooks.configs.recommended.rules,
-      "react/react-in-jsx-scope": "off",
-      "react/prop-types": "off",
-      "react-hooks/exhaustive-deps": "off",
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": [
         "error",
@@ -83,7 +53,7 @@ export default [
             {
               group: ["../*", "../../*"],
               message:
-                "Use '@/' alias imports instead of relative parent imports (../ or ../../)",
+                "Use alias imports instead of relative parent imports (../ or ../../)",
             },
           ],
         },
@@ -104,23 +74,6 @@ export default [
         },
       ],
       "simple-import-sort/exports": "error",
-      "react/function-component-definition": [
-        "error",
-        {
-          namedComponents: "function-declaration",
-          unnamedComponents: "arrow-function",
-        },
-      ],
-      "react/jsx-sort-props": [
-        "error",
-        {
-          callbacksLast: true,
-          shorthandFirst: true,
-          multiline: "last",
-          ignoreCase: true,
-          reservedFirst: true,
-        },
-      ],
       "@stylistic/padding-line-between-statements": [
         "error",
         { blankLine: "always", prev: "import", next: "*" },
@@ -140,38 +93,9 @@ export default [
       ],
     },
   },
-  reactYouMightNotNeedAnEffect.configs.strict,
   {
-    // shadcn primitives are vendored and re-fetched by the CLI — exempt them
-    // from prop sorting (their multiline-prop-before-spread isn't autofixable).
-    files: ["components/ui/**"],
-    rules: {
-      "react/jsx-sort-props": "off",
-    },
-  },
-  {
-    // The scaffolder is a standalone Node package, not app code — relative
-    // imports are correct there and the @/ alias doesn't exist.
-    files: ["create/**"],
-    languageOptions: {
-      globals: {
-        ...globals.node,
-      },
-    },
-    rules: {
-      "no-restricted-imports": "off",
-    },
-  },
-  {
-    ignores: [
-      ".next/**",
-      "out/**",
-      "build/**",
-      "coverage/**",
-      "next-env.d.ts",
-      // Files staged for generated projects — they reference @repo/* packages
-      // that only exist once a workspace is scaffolded.
-      "create/templates/**",
-    ],
+    ignores: [".next/**", "out/**", "build/**", "coverage/**", "next-env.d.ts"],
   },
 ];
+
+export default base;

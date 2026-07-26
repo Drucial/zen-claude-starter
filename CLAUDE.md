@@ -23,6 +23,8 @@ Speak plainly and concisely. No filler, no preamble, no restating the question. 
 
 ### Directory Structure
 
+<!-- layout:start -->
+
 - `app/` — Next.js App Router routes, layouts, and server components
 - `components/` — global, cross-feature components only
   - `ui/` — shadcn-style primitives (Button, Input, Dialog, etc.)
@@ -35,6 +37,8 @@ Speak plainly and concisely. No filler, no preamble, no restating the question. 
 - `api/` — external API clients and integration layer
 
 Create top-level `components`, `context`, `utils` dirs only when the code is needed globally; otherwise co-locate within the feature directory that owns it. Hooks are the exception — they always live under `hooks/`, never co-located.
+
+<!-- layout:end -->
 
 ### Component Co-location
 

@@ -1,0 +1,19 @@
+{
+  "name": "zen-claude-starter",
+  "version": "0.1.0",
+  "description": "Scaffold a Next.js app or monorepo from the zen-claude-starter methodology.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "zen-claude-starter": "./cli.mjs"
+  },
+  "files": [
+    "cli.mjs",
+    "template-source.mjs",
+    "transforms",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

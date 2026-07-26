@@ -101,6 +101,8 @@ See `CLAUDE.md` → Data Fetching & Mutations for the full flow. In short:
 
 Search before creating anything new.
 
+<!-- layout:start -->
+
 - **UI primitives** (highest priority): check `components/ui/`, then
   `components/shared/`, then `components/layout/`. If it exists, compose with it —
   pass props/variants instead of restyling. If not, confirm before creating one.
@@ -109,6 +111,8 @@ Search before creating anything new.
 - **Validations / schemas**: check the schema home before adding a new one.
 - **Never modify shared UI** (`components/ui/`, `components/shared/`) behavior or API
   without an explicit ask — many places consume it.
+
+<!-- layout:end -->
 
 ## Tests
 
