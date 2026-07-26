@@ -150,6 +150,28 @@ export default [
     },
   },
   {
-    ignores: [".next/**", "out/**", "build/**", "coverage/**", "next-env.d.ts"],
+    // The scaffolder is a standalone Node package, not app code — relative
+    // imports are correct there and the @/ alias doesn't exist.
+    files: ["create/**", "scripts/**"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
+  {
+    ignores: [
+      ".next/**",
+      "out/**",
+      "build/**",
+      "coverage/**",
+      "next-env.d.ts",
+      // Files staged for generated projects — they reference @repo/* packages
+      // that only exist once a workspace is scaffolded.
+      "create/templates/**",
+    ],
   },
 ];

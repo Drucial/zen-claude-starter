@@ -11,10 +11,10 @@ export function Guides() {
     >
       <Reveal>
         <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Find your footing
+          Scaffold an app or a monorepo
         </h2>
         <p className="text-muted-foreground mt-4 text-lg leading-relaxed">
-          Start a project, then reach for the patterns you&apos;ll use on day
+          Start a project, then reach for the patterns you&apos;ll want on day
           one.
         </p>
       </Reveal>
@@ -22,8 +22,8 @@ export function Guides() {
         <ScaffoldPlayground />
       </Reveal>
       <div className="mt-12 space-y-12">
-        {GUIDES.map((guide, index) => (
-          <Reveal key={guide.title} delay={index * 0.05}>
+        {GUIDES.map((guide) => (
+          <Reveal key={guide.title}>
             <div>
               <h3 className="text-lg font-semibold tracking-tight">
                 {guide.title}

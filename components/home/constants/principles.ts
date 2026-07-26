@@ -19,36 +19,36 @@ export const PRINCIPLES: Principle[] = [
     icon: ServerIcon,
     title: "Server-first",
     description:
-      "Server Components by default. Reach for the client only when interactivity truly calls for it.",
+      "Server Components by default. Reach for the client when a component needs state, effects, or the browser.",
   },
   {
     icon: ShieldCheckIcon,
     title: "Conventions, enforced",
     description:
-      "ESLint and Prettier hold the line on imports, props, and types — so reviews stay about ideas.",
+      "ESLint and Prettier settle imports, props, and types before review, so nobody spends a comment on them.",
   },
   {
     icon: WorkflowIcon,
     title: "A clear data flow",
     description:
-      "Server actions, typed query factories, and one mutation wrapper. The path is already laid out.",
+      "Server actions read. Typed query factories and one mutation wrapper handle the client. You follow a path someone already walked.",
   },
   {
     icon: Minimize2Icon,
     title: "No needless abstraction",
     description:
-      "Three plain lines beat a clever helper used once. Build only what the moment asks for.",
+      "Three plain lines beat a clever helper used once. Build what this feature needs and stop.",
   },
   {
     icon: FlaskConicalIcon,
     title: "Tested where it counts",
     description:
-      "Cover the logic — utils, hooks, actions — and leave presentation free to change.",
+      "Cover utils, hooks, and server actions. Leave the markup free to change without breaking a suite.",
   },
   {
     icon: LeafIcon,
     title: "Calm by structure",
     description:
-      "A predictable home for every file, so your attention stays on the work, not the wiring.",
+      "Every file has a predictable home, so you spend your attention on the feature instead of the wiring.",
   },
 ];

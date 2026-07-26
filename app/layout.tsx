@@ -11,9 +11,12 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+// Mono is used in the eyebrow, code blocks, and version column — never in the
+// LCP text — so it shouldn't compete for priority with the heading font.
 const geistMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 export const metadata: Metadata = {

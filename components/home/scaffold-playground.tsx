@@ -4,30 +4,47 @@ import { useState } from "react";
 
 import { TerminalIcon } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+
+import { CREATE_COMMAND } from "./constants/links";
+import type { ScaffoldMode } from "./constants/scaffold-modes";
+import { SCAFFOLD_MODES } from "./constants/scaffold-modes";
 import { CopyButton } from "./copy-button";
 import { sanitizeProjectName } from "./utils/project-name";
 
-const STEPS = [
-  "Prompts for a name and where to create it",
-  "Copies the template, then starts fresh git history",
-  "Installs dependencies — ready to pnpm dev",
-];
-
 export function ScaffoldPlayground() {
   const [raw, setRaw] = useState("my-app");
+  const [mode, setMode] = useState<ScaffoldMode>(SCAFFOLD_MODES[0]);
 
   const name = sanitizeProjectName(raw) || "my-app";
-  const command = `pnpm create-project ${name}`;
+  const command = `${CREATE_COMMAND} ${name}${mode.flag}`;
 
   return (
     <div className="border-border bg-card/40 rounded-2xl border p-6 sm:p-8">
-      <div className="flex items-center gap-2 text-sm font-medium tracking-tight">
+      <h3 className="flex items-center gap-2 text-sm font-medium tracking-tight">
         <TerminalIcon className="text-muted-foreground size-4" />
         Start a project
-      </div>
+      </h3>
       <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-        Name it below, copy the command, and run it from the repo.
+        Pick a layout, name it, then run the command anywhere. No clone needed.
       </p>
+      <div
+        aria-label="Project layout"
+        className="border-border bg-muted/40 mt-5 inline-flex gap-1 rounded-lg border p-1"
+        role="group"
+      >
+        {SCAFFOLD_MODES.map((option) => (
+          <Button
+            key={option.id}
+            aria-pressed={option.id === mode.id}
+            size="sm"
+            variant={option.id === mode.id ? "default" : "ghost"}
+            onClick={() => setMode(option)}
+          >
+            {option.label}
+          </Button>
+        ))}
+      </div>
       <label
         className="text-muted-foreground mt-5 block text-xs font-medium"
         htmlFor="project-name"
@@ -50,7 +67,7 @@ export function ScaffoldPlayground() {
         <CopyButton label="Copy command" value={command} />
       </div>
       <ul className="text-muted-foreground mt-5 space-y-2 text-sm">
-        {STEPS.map((step) => (
+        {mode.steps.map((step) => (
           <li key={step} className="flex gap-2.5">
             <span
               aria-hidden

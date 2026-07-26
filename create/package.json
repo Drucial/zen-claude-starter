@@ -1,0 +1,42 @@
+{
+  "name": "zen-claude-starter",
+  "version": "0.1.0",
+  "description": "Scaffold a Next.js app or monorepo from the zen-claude-starter methodology.",
+  "license": "MIT",
+  "homepage": "https://zenstart.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Drucial/zen-claude-starter.git",
+    "directory": "create"
+  },
+  "keywords": [
+    "next",
+    "nextjs",
+    "starter",
+    "scaffold",
+    "monorepo",
+    "turborepo",
+    "claude"
+  ],
+  "type": "module",
+  "bin": {
+    "zen-claude-starter": "./cli.mjs"
+  },
+  "files": [
+    "cli.mjs",
+    "features.mjs",
+    "layouts.mjs",
+    "template-source.mjs",
+    "tui.mjs",
+    "wizard.mjs",
+    "transforms",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "zen": {
+    "repo": "Drucial/zen-claude-starter",
+    "templateRef": "v0.1.0"
+  }
+}

@@ -1,0 +1,6 @@
+- **Database access**: use Next.js server actions. Never call the DB from a component.
+- **Server Components**: read data directly via server actions. This is the default — reach for it first.
+- **Client Components**: don't fetch in an effect. Pass server-fetched data down as props, or move the read into a Server Component that renders the client one.
+- **Mutations**: call a server action from the event handler, then `revalidatePath` / `revalidateTag` so the server re-renders with fresh data.
+- **Adding a client cache later**: if you bring in TanStack Query or similar, define `queryOptions()` factories in the model's hooks dir (e.g. `hooks/users/users.queries.ts`) rather than inline in components, so keys and config live in one typed place.
+- **External APIs**: live in `api/`. Consume the same way — no direct fetch calls in client components.

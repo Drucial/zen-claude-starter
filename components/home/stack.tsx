@@ -12,10 +12,11 @@ export function Stack() {
       <div className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
         <Reveal className="max-w-2xl">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            The stack
+            The stack: Next.js 16, React 19, Tailwind v4
           </h2>
           <p className="text-muted-foreground mt-4 text-lg leading-relaxed">
-            Modern, well-documented tools. Follow any thread to its source.
+            Tools with real documentation. Follow any of them back to the
+            source.
           </p>
         </Reveal>
         <Reveal className="border-border/60 mt-12 border-t">

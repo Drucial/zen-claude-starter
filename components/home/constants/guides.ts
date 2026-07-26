@@ -9,7 +9,7 @@ export const GUIDES: Guide[] = [
   {
     title: "Add a UI component",
     description:
-      "Vendor a shadcn primitive into components/ui with the new-york style, then compose it — pass props and variants instead of restyling.",
+      "Vendor a shadcn primitive into components/ui with the new-york style, then compose it. Pass props and variants rather than restyling.",
     language: "bash",
     code: "pnpm dlx shadcn@latest add card dialog",
   },
@@ -33,13 +33,13 @@ const { data } = useQuery(postQueries.all());
 const createPost = useAppMutation({
   mutationFn: createPost,
   successMessage: "Post published",
-  invalidates: [["posts"]],
+  invalidates: [postQueries.all().queryKey],
 });`,
   },
   {
     title: "Validate with Zod",
     description:
-      "Keep a form's schema and its inferred type in the form file — they're tightly coupled. Parse on submit for validated, fully typed input.",
+      "Keep a form's schema and its inferred type in the form file, where the coupling is obvious. Parse on submit for typed, validated input.",
     language: "tsx",
     code: `// components/contact/contact-form.tsx
 import { z } from "zod";
@@ -60,12 +60,12 @@ function onSubmit(values: ContactInput) {
   {
     title: "Write a test",
     description:
-      "Co-locate it in a __tests__ dir next to the file. Cover the logic — utils, hooks, actions — not the markup.",
+      "Co-locate it in a __tests__ dir beside the file. Cover utils, hooks, and server actions. Leave the markup alone.",
     language: "tsx",
     code: `// utils/__tests__/slugify.test.ts
 import { describe, expect, it } from "vitest";
 
-import { slugify } from "../slugify";
+import { slugify } from "@/utils/slugify";
 
 describe("slugify", () => {
   it("lowercases and hyphenates", () => {
