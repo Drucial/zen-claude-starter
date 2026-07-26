@@ -77,7 +77,16 @@ function preflight(tag) {
   const tags = run("git", ["tag", "--list", tag]);
   if (tags) die(`${tag} already exists`);
 
-  say("  clean, on main, up to date, tag is free");
+  // Check this before doing anything: the tag is pushed before the package is
+  // published, so an auth failure at the publish step strands the release with
+  // its tag already public and nothing on the registry to match it.
+  try {
+    run("npm", ["whoami"], { stdio: ["ignore", "pipe", "ignore"] });
+  } catch {
+    die("not logged in to npm — run `npm login` first");
+  }
+
+  say("  clean, on main, up to date, tag is free, npm is authenticated");
 }
 
 function verify() {
@@ -211,7 +220,17 @@ async function main() {
   }
 
   loud("git", ["push", "--follow-tags"]);
-  loud("npm", ["publish"], { cwd: join(REPO, "create") });
+
+  // The tag is public from here on, so a failure below is resumable rather
+  // than something to undo — say so instead of dumping a stack trace.
+  try {
+    loud("npm", ["publish"], { cwd: join(REPO, "create") });
+  } catch {
+    die(
+      `${tag} is pushed, but the publish failed. Fix the cause, then finish ` +
+        "with:\n    cd create && npm publish"
+    );
+  }
 
   say(`\n[32m✓[0m ${tag} released — npx zen-claude-starter@${version}\n`);
 }
